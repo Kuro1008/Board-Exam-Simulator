@@ -14,3 +14,8 @@ Access the live simulator directly in your browser:
 - Interactive Drill Engine: Instant feedback, memory anchors (`BECAUSE:` explanations), and live HUD stats.
 - Performance Analytics: Track your scores, drill history, and subject weaknesses.
 - JSON Import: Import custom `.json` review decks or paste deck codes instantly.
+
+☕ Support the Project
+If this universal board exam simulator helped you study or review, consider supporting future updates on Patreon!
+
+[![Patreon](https://img.shields.io/badge/Support%20me%20on-Patreon-%23FF424D?style=for-the-badge&logo=patreon&logoColor=white)](https://www.patreon.com/cw/Kuro1008)
