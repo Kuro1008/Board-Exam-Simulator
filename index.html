@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Board Exam Simulator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #080c14;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        /* COLORBLIND & ACCESSIBILITY MODES */
+        body.cb-deuteranopia .text-emerald-400, body.cb-deuteranopia .text-emerald-300 { color: #38bdf8 !important; }
+        body.cb-deuteranopia .bg-emerald-600, body.cb-deuteranopia .bg-emerald-500 { background-color: #0284c7 !important; } 
+        body.cb-deuteranopia .border-emerald-500 { border-color: #38bdf8 !important; }
+        body.cb-deuteranopia .text-rose-400, body.cb-deuteranopia .text-rose-300 { color: #f59e0b !important; }
+        body.cb-deuteranopia .border-rose-500 { border-color: #f59e0b !important; }
+        body.cb-deuteranopia .bg-rose-500\/10 { background-color: rgba(245, 158, 11, 0.15) !important; }
+
+        body.cb-tritanopia .text-emerald-400, body.cb-tritanopia .text-emerald-300 { color: #2dd4bf !important; }
+        body.cb-tritanopia .text-rose-400, body.cb-tritanopia .text-rose-300 { color: #f43f5e !important; }
+        body.cb-tritanopia .border-rose-500 { border-color: #f43f5e !important; }
+
+        body.cb-highcontrast { background-color: #000000 !important; color: #ffffff !important; }
+        body.cb-highcontrast .bg-slate-900, body.cb-highcontrast .bg-slate-950 { background-color: #050505 !important; border-color: #444 !important; }
+        body.cb-highcontrast .text-slate-400 { color: #d1d5db !important; }
+
+        /* APP THEMES */
+        body.theme-cyber { background-color: #0d0714 !important; }
+        body.theme-cyber header { background-color: #170d28 !important; border-color: #2e1a4f !important; }
+        body.theme-cyber .bg-slate-900 { background-color: #160c26 !important; border-color: #2e1a4f !important; }
+        body.theme-cyber .bg-slate-800 { background-color: #23133d !important; }
+
+        body.theme-matrix { background-color: #020d08 !important; }
+        body.theme-matrix header { background-color: #061f14 !important; border-color: #0d3a25 !important; }
+        body.theme-matrix .bg-slate-900 { background-color: #051a10 !important; border-color: #0d3a25 !important; }
+        body.theme-matrix .bg-slate-800 { background-color: #0a2d1d !important; }
+
+        body.theme-oled { background-color: #000000 !important; }
+        body.theme-oled header { background-color: #000000 !important; border-color: #1f2937 !important; }
+        body.theme-oled .bg-slate-900 { background-color: #080808 !important; border-color: #1f2937 !important; }
+        body.theme-oled .bg-slate-800 { background-color: #121212 !important; }
+
+        /* FONT SIZE ACCESSIBILITY */
+        body.fs-small { font-size: 13px !important; }
+        body.fs-small #question-text { font-size: 1rem !important; }
+        body.fs-small .text-sm { font-size: 0.75rem !important; }
+
+        body.fs-large { font-size: 18px !important; }
+        body.fs-large #question-text { font-size: 1.45rem !important; }
+        body.fs-large #choices-container button span { font-size: 1.05rem !important; }
+        body.fs-large .text-xs { font-size: 0.85rem !important; }
+        body.fs-large .text-sm { font-size: 1.05rem !important; }
+
+        body.fs-xlarge { font-size: 21px !important; }
+        body.fs-xlarge #question-text { font-size: 1.8rem !important; }
+        body.fs-xlarge #choices-container button span { font-size: 1.25rem !important; }
+        body.fs-xlarge .text-xs { font-size: 0.95rem !important; }
+        body.fs-xlarge .text-sm { font-size: 1.2rem !important; }
+        body.fs-xlarge .text-base { font-size: 1.35rem !important; }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <!-- Toast Notification Banner -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()" title="Return to Main Course Folders Home">
+                <div class="p-2.5 bg-indigo-600/20 text-indigo-400 rounded-xl border border-indigo-500/30">
+                    <i class="fa-solid fa-graduation-cap text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-base sm:text-lg text-slate-100 leading-tight">Universal Board Exam Simulator</h1>
+                    <p id="deck-subtitle" class="text-xs text-slate-400 font-medium">Multi-Course & Multi-Subject Drill Engine</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 sm:gap-4">
+                <!-- Settings Button -->
+                <button onclick="toggleSettingsModal()" class="px-3.5 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700/60 transition-all text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md">
+                    <i class="fa-solid fa-sliders text-indigo-400"></i>
+                    <span class="hidden sm:inline">Settings</span>
+                </button>
+
+                <!-- HUD Stats -->
+                <div id="hud-stats" class="hidden items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+                    <div class="bg-slate-800/90 px-3 py-1.5 rounded-xl border border-slate-700/60 flex items-center gap-1.5">
+                        <i class="fa-solid fa-trophy text-amber-400"></i>
+                        <span id="score-display" class="font-extrabold text-amber-300">0</span>
+                    </div>
+                    <div class="bg-slate-800/90 px-3 py-1.5 rounded-xl border border-slate-700/60 flex items-center gap-1.5">
+                        <i class="fa-solid fa-fire text-orange-500"></i>
+                        <span id="streak-display" class="font-extrabold text-orange-400">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-8 w-full flex-1 flex flex-col justify-center">
+
+        <!-- DECK HUB (COURSE FOLDERS & SUBJECT SECTIONS) -->
+        <div id="deck-hub-screen" class="space-y-6">
+            
+            <!-- Top Action Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2.5">
+                        <i class="fa-solid fa-folder-tree text-indigo-400"></i>
+                        <span>Board Exam Folders</span>
+                    </h2>
+                    <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Organized by Exam Course (REE, LET, BLEPP) & Subject Sections</p>
+                </div>
+                
+                <div class="flex items-center gap-2.5 shrink-0">
+                    <button onclick="togglePasteModal()" class="px-4 py-2.5 bg-slate-800/90 hover:bg-slate-700 text-slate-200 font-bold rounded-xl transition-all text-xs sm:text-sm border border-slate-700/70 flex items-center gap-2 shadow-md">
+                        <i class="fa-solid fa-paste text-indigo-400"></i>
+                        <span>Paste JSON</span>
+                    </button>
+
+                    <label class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all text-xs sm:text-sm cursor-pointer shadow-lg shadow-indigo-600/30 flex items-center gap-2">
+                        <i class="fa-solid fa-file-circle-plus"></i>
+                        <span>Import JSON File</span>
+                        <input type="file" id="json-file-input" accept=".json,application/json,.txt" onchange="importJsonDeck(event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <!-- BREADCRUMB & NAVIGATION BAR -->
+            <div id="hub-breadcrumb" class="flex items-center justify-between text-xs sm:text-sm font-bold bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800/90 shadow-md">
+                <!-- Dynamically updated breadcrumbs -->
+            </div>
+
+            <!-- Dynamic Category Filter Tabs -->
+            <div id="dynamic-filter-tabs" class="hidden items-center gap-2.5 overflow-x-auto pb-1 custom-scrollbar text-xs sm:text-sm font-bold">
+                <!-- Dynamically generated subject filter category buttons -->
+            </div>
+
+            <!-- Course Folders OR Decks Container -->
+            <div id="decks-container" class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <!-- Dynamic Course Folders or Deck Cards Loaded Here -->
+            </div>
+        </div>
+
+        <!-- DECK START CARD -->
+        <div id="start-card" class="hidden bg-slate-900 border border-slate-800/90 rounded-2xl p-6 sm:p-10 text-center shadow-2xl relative overflow-hidden">
+            <button onclick="showDeckHub()" class="absolute top-4 left-4 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 transition-colors">
+                <i class="fa-solid fa-arrow-left"></i> Back to Decks
+            </button>
+            <div class="mt-4 inline-flex p-4 bg-indigo-500/10 text-indigo-400 rounded-2xl mb-4 border border-indigo-500/20 text-3xl">
+                <i class="fa-solid fa-book-bookmark"></i>
+            </div>
+            <h2 id="active-deck-title" class="text-2xl sm:text-3xl font-extrabold text-white mb-2">Topic Title</h2>
+            <p id="active-deck-desc" class="text-slate-400 text-sm max-w-lg mx-auto mb-6 leading-relaxed">Topic description goes here.</p>
+
+            <div class="grid grid-cols-3 gap-3 max-w-md mx-auto mb-6 text-left text-xs sm:text-sm">
+                <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/40">
+                    <div class="text-slate-400 mb-1">Questions</div>
+                    <div id="active-deck-count" class="font-bold text-slate-200 text-base">0 Items</div>
+                </div>
+                <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/40">
+                    <div class="text-slate-400 mb-1">Format</div>
+                    <div class="font-bold text-slate-200 text-base">Multiple Choice</div>
+                </div>
+
+                <div class="bg-slate-800/50 p-2.5 rounded-xl border border-indigo-500/30 flex flex-col justify-center">
+                    <div class="text-slate-400 text-[11px] mb-1 flex items-center justify-between">
+                        <span>Target Pass</span>
+                        <i class="fa-solid fa-bullseye text-indigo-400 text-[10px]"></i>
+                    </div>
+                    <select id="session-target-dropdown" onchange="updateSessionPassTarget(this.value)" class="bg-slate-900 text-emerald-400 font-extrabold text-xs sm:text-sm rounded-lg px-1.5 py-1 border border-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                        <option value="50">50% (Easy)</option>
+                        <option value="70">70% (Passing)</option>
+                        <option value="80" selected>80% (Board Standard)</option>
+                        <option value="90">90% (Strict)</option>
+                        <option value="95">95% (Mastery)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- DECK HISTORY -->
+            <div id="start-card-history" class="max-w-md mx-auto mb-6 bg-slate-800/40 p-3.5 rounded-xl border border-slate-800/80 text-left space-y-2 hidden">
+                <!-- Dynamically injected -->
+            </div>
+
+            <!-- SAVED SESSION PROGRESS DASHBOARD -->
+            <div id="saved-session-banner" class="max-w-md mx-auto mb-6 bg-slate-950/80 border border-slate-800 rounded-xl p-4 text-left space-y-3">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="font-bold text-slate-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-bookmark text-indigo-400"></i>
+                        <span>Saved Progress Found</span>
+                    </span>
+                    <span id="saved-progress-percent" class="font-bold text-indigo-400">0%</span>
+                </div>
+
+                <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700/30">
+                    <div id="saved-progress-bar" class="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full transition-all duration-300 w-[0%]"></div>
+                </div>
+
+                <div class="grid grid-cols-4 gap-2 text-center text-[11px] pt-1">
+                    <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                        <div class="text-slate-500 text-[10px]">At Question</div>
+                        <div id="saved-q-num" class="font-bold text-slate-200">1/35</div>
+                    </div>
+                    <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                        <div class="text-slate-500 text-[10px]">Score</div>
+                        <div id="saved-score" class="font-bold text-amber-400">0</div>
+                    </div>
+                    <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                        <div class="text-slate-500 text-[10px]">Correct</div>
+                        <div id="saved-correct" class="font-bold text-emerald-400">0</div>
+                    </div>
+                    <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                        <div class="text-slate-500 text-[10px]">Missed</div>
+                        <div id="saved-missed" class="font-bold text-rose-400">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUICK SHUFFLE TOGGLES -->
+            <div class="max-w-md mx-auto mb-6 bg-slate-800/40 p-3.5 rounded-xl border border-slate-800/80 text-left space-y-2 text-xs">
+                <div class="font-bold text-slate-300 mb-1 flex items-center gap-1.5">
+                    <i class="fa-solid fa-shuffle text-indigo-400"></i>
+                    <span>Deck Randomization Settings</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400">Shuffle Question Order</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="start-shuffle-q-toggle" class="sr-only peer" checked onchange="updateShuffleFromStartCard('q', this.checked)">
+                        <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400">Shuffle Choice Options (A, B, C, D)</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="start-shuffle-c-toggle" class="sr-only peer" checked onchange="updateShuffleFromStartCard('c', this.checked)">
+                        <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- START / CONTINUE ACTION BUTTONS -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
+                <button id="btn-continue-session" onclick="continueSession()" class="w-full sm:flex-1 px-5 py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:hover:bg-emerald-600 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 text-xs sm:text-sm">
+                    <i class="fa-solid fa-play"></i>
+                    <span>Continue Session</span>
+                </button>
+
+                <button onclick="startQuiz()" class="w-full sm:flex-1 px-5 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-600/30 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 text-xs sm:text-sm">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Start Fresh Exam</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="quiz-card" class="hidden flex-col gap-5">
+            <!-- Progress Bar -->
+            <div class="space-y-2">
+                <div class="flex justify-between text-xs text-slate-400 font-medium px-1">
+                    <span>Question <span id="current-q-num" class="text-indigo-400 font-bold">1</span> of <span id="total-q-num">35</span></span>
+                    <span id="progress-percent" class="text-slate-400">0%</span>
+                </div>
+                <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700/30">
+                    <div id="progress-bar" class="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full transition-all duration-300 w-[0%]"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-slate-900 border border-slate-800/90 rounded-2xl p-5 sm:p-7 shadow-xl space-y-6 relative">
+                <div id="question-text" class="text-base sm:text-xl font-semibold text-slate-100 leading-snug">
+                    Loading question...
+                </div>
+
+                <!-- Choices Container -->
+                <div id="choices-container" class="grid grid-cols-1 gap-3"></div>
+
+                <!-- Explanation Box -->
+                <div id="explanation-box" class="hidden p-4 rounded-xl border text-sm leading-relaxed transition-all space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 font-bold" id="explanation-title">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>EXPLANATION</span>
+                        </div>
+                        <span id="keyword-badge-question" class="hidden text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                            🔑 <span id="keyword-text-question"></span>
+                        </span>
+                    </div>
+                    <div id="explanation-text" class="text-slate-300"></div>
+                </div>
+
+                <!-- Next Button -->
+                <div class="flex justify-between items-center pt-2">
+                    <button onclick="showDeckHub()" class="text-xs font-semibold text-slate-500 hover:text-slate-300 underline">Quit Session</button>
+                    <button id="next-btn" onclick="nextQuestion()" class="hidden px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-md shadow-indigo-600/20 items-center gap-2 text-sm">
+                        <span>Next Question</span>
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTS CARD -->
+        <div id="results-card" class="hidden bg-slate-900 border border-slate-800/90 rounded-2xl p-6 sm:p-10 shadow-2xl space-y-6">
+            <div class="text-center space-y-3">
+                <div id="badge-icon" class="inline-flex p-4 rounded-full text-4xl mb-1">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-white" id="results-title">Quiz Completed!</h2>
+                
+                <div id="motivation-box" class="bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-4 max-w-lg mx-auto text-xs sm:text-sm text-indigo-200 leading-relaxed shadow-inner">
+                    <!-- Dynamic motivational text loaded here -->
+                </div>
+            </div>
+
+            <!-- Score Cards Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50 text-center">
+                    <div class="text-xs text-slate-400 mb-1">Final Score</div>
+                    <div id="final-score" class="text-2xl font-black text-amber-400">0</div>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50 text-center">
+                    <div class="text-xs text-slate-400 mb-1">Accuracy</div>
+                    <div id="final-accuracy" class="text-2xl font-black text-emerald-400">0%</div>
+                </div>
+                <div class="col-span-2 sm:col-span-1 bg-slate-800/60 p-4 rounded-xl border border-slate-700/50 text-center">
+                    <div class="text-xs text-slate-400 mb-1">Status</div>
+                    <div id="final-status-badge" class="text-xl font-black text-emerald-400">PASSED</div>
+                </div>
+            </div>
+
+            <!-- Review Missed Questions & Keyword Anchors -->
+            <div id="review-section" class="space-y-3 pt-2">
+                <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                    <span>Missed Items & Key Memory Anchors</span>
+                    <span id="missed-count-badge" class="px-2 py-0.5 bg-rose-500/20 text-rose-400 rounded-full text-xs font-semibold">0 Missed</span>
+                </h3>
+                <div id="missed-list" class="max-h-72 overflow-y-auto custom-scrollbar space-y-3 pr-1"></div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                <button onclick="startQuiz()" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Retake Exam</span>
+                </button>
+                <button onclick="showDeckHub()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl transition-all text-sm flex items-center justify-center gap-2 border border-slate-700">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>Select Another Topic</span>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- PASTE JSON TEXT MODAL -->
+    <div id="paste-json-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-base text-white flex items-center gap-2">
+                    <i class="fa-solid fa-code text-indigo-400"></i>
+                    <span>Paste JSON Deck Code</span>
+                </h3>
+                <button onclick="togglePasteModal()" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-400 leading-relaxed">
+                Copy the JSON code generated from your chat and paste it below to create a new deck directly:
+            </p>
+
+            <textarea id="paste-json-input" rows="8" placeholder='{"title": "Sample Topic", "course": "REE", "category": "EE", "questions": [...]}' class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-indigo-300 focus:outline-none focus:border-indigo-500 custom-scrollbar"></textarea>
+
+            <div class="flex items-center justify-end gap-2 pt-1">
+                <button onclick="togglePasteModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs">Cancel</button>
+                <button onclick="processPastedJson()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-indigo-600/20">
+                    <i class="fa-solid fa-file-import"></i>
+                    <span>Import Deck</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800/90 rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl flex flex-col max-h-[88vh]">
+            
+            <!-- Sticky Modal Header -->
+            <div class="flex items-center justify-between border-b border-slate-800/90 pb-3.5 shrink-0">
+                <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-indigo-400"></i>
+                    <span>Exam Preferences</span>
+                </h3>
+                <button onclick="toggleSettingsModal()" class="text-slate-400 hover:text-white p-1 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Scrollable Content Container -->
+            <div class="overflow-y-auto custom-scrollbar space-y-4 text-sm pr-1 py-4 flex-1">
+                <!-- Target Passing Score -->
+                <div class="bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/50 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="font-bold text-slate-200">Passing Grade Target</div>
+                        <span id="pass-target-display" class="font-extrabold text-emerald-400 text-base">80%</span>
+                    </div>
+                    <input type="range" id="pass-target-slider" min="50" max="95" step="5" value="80" onchange="saveSettings()" oninput="updateSessionPassTarget(this.value)" class="w-full accent-indigo-500 cursor-pointer">
+                    <div class="text-xs text-slate-400 flex justify-between font-medium">
+                        <span>50% (Easy)</span>
+                        <span>75% (Board Standard)</span>
+                        <span>95% (Strict)</span>
+                    </div>
+                </div>
+
+                <!-- COLORBLIND ACCESSIBILITY MODE -->
+                <div class="bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/50 space-y-2">
+                    <div class="font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-eye text-indigo-400"></i>
+                        <span>Colorblind Vision Mode</span>
+                    </div>
+                    <select id="colorblind-select" onchange="updateLiveTheme()" class="w-full bg-slate-900 text-slate-200 border border-slate-700 rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer">
+                        <option value="none">Normal Vision (Default)</option>
+                        <option value="deuteranopia">Protanopia / Deuteranopia (Blue / Yellow)</option>
+                        <option value="tritanopia">Tritanopia (Teal / Magenta)</option>
+                        <option value="highcontrast">High Contrast (Monochrome)</option>
+                    </select>
+                </div>
+
+                <!-- APP UI THEME SELECTOR -->
+                <div class="bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/50 space-y-2">
+                    <div class="font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-palette text-indigo-400"></i>
+                        <span>App Theme Style</span>
+                    </div>
+                    <select id="theme-select" onchange="updateLiveTheme()" class="w-full bg-slate-900 text-slate-200 border border-slate-700 rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer">
+                        <option value="slate">Midnight Slate (Default)</option>
+                        <option value="cyber">Cyber Violet</option>
+                        <option value="matrix">Matrix Emerald</option>
+                        <option value="oled">Pure OLED Black</option>
+                    </select>
+                </div>
+
+                <!-- TEXT / FONT SIZE ACCESSIBILITY -->
+                <div class="bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/50 space-y-2">
+                    <div class="font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-text-height text-indigo-400"></i>
+                        <span>Text / Font Size</span>
+                    </div>
+                    <select id="fontsize-select" onchange="updateLiveTheme()" class="w-full bg-slate-900 text-slate-200 border border-slate-700 rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer">
+                        <option value="small">Compact / Small</option>
+                        <option value="normal" selected>Normal (Default)</option>
+                        <option value="large">Large (Easy Read - Far Sighted)</option>
+                        <option value="xlarge">Extra Large (High Visibility)</option>
+                    </select>
+                </div>
+
+                <!-- Shuffle Questions Toggle -->
+                <div class="flex items-center justify-between bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/50">
+                    <div>
+                        <div class="font-bold text-slate-200">Shuffle Question Order</div>
+                        <div class="text-xs text-slate-400">Randomize question order every run</div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="shuffle-q-toggle" class="sr-only peer" checked onchange="saveSettings()">
+                        <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                </div>
+
+                <!-- Shuffle Choices Toggle -->
+                <div class="flex items-center justify-between bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/50">
+                    <div>
+                        <div class="font-bold text-slate-200">Shuffle Answer Choices</div>
+                        <div class="text-xs text-slate-400">Mix up choices (A, B, C, D)</div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="shuffle-c-toggle" class="sr-only peer" checked onchange="saveSettings()">
+                        <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                </div>
+
+                <!-- SETTINGS HISTORY BREAKDOWN SECTION -->
+                <hr class="border-slate-800 my-4">
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-white flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-chart-line text-indigo-400"></i> Performance Breakdown by Subject
+                        </h4>
+                        <span class="text-[10px] text-slate-400 font-medium">Focus Area Analysis</span>
+                    </div>
+                    <div id="settings-history-stats" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-center text-xs">
+                        <!-- Stats injected here -->
+                    </div>
+                    <div id="settings-history-list" class="space-y-3 pt-1">
+                        <!-- Subject breakdown & Deck sessions injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sticky Modal Footer -->
+            <div class="pt-3 border-t border-slate-800/90 shrink-0">
+                <button onclick="toggleSettingsModal()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all text-sm shadow-lg shadow-indigo-600/30">
+                    Save & Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-4 border-t border-slate-900/90 text-center text-xs text-slate-600">
+        Master Board Exam Simulator • Universal Multi-Course Drill Engine
+    </footer>
+
+    <script>
+        // GLOBAL CONSTANTS & PRESETS
+        const coursePresets = {
+            "REE": {
+                id: "REE",
+                title: "Electrical Engineering (REE)",
+                desc: "Registered Electrical Engineer Board Exam Subjects",
+                icon: "fa-bolt",
+                gradient: "from-amber-950/50 via-slate-900 to-slate-900 border-amber-500/40 hover:border-amber-300",
+                badgeBg: "bg-amber-500/20 text-amber-300 border-amber-500/40",
+                subjects: {
+                    "EE": { label: "EE Professional", color: "bg-amber-500/20 text-amber-300 border-amber-500/30", icon: "fa-bolt" },
+                    "MATH": { label: "Mathematics", color: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30", icon: "fa-calculator" },
+                    "ESAS": { label: "ESAS Engineering", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30", icon: "fa-gears" }
+                }
+            },
+            "LET": {
+                id: "LET",
+                title: "Teachers Board Exam (LET)",
+                desc: "Licensure Examination for Teachers Subjects",
+                icon: "fa-graduation-cap",
+                gradient: "from-blue-950/60 via-indigo-950/40 to-slate-900 border-blue-500/50 hover:border-blue-300",
+                badgeBg: "bg-blue-500/20 text-blue-300 border-blue-500/40",
+                subjects: {
+                    "GENED": { label: "General Education", color: "bg-blue-500/20 text-blue-300 border-blue-500/30", icon: "fa-book" },
+                    "PROFED": { label: "Professional Education", color: "bg-purple-500/20 text-purple-300 border-purple-500/30", icon: "fa-chalkboard-user" },
+                    "MAJOR": { label: "Major Field", color: "bg-pink-500/20 text-pink-300 border-pink-500/30", icon: "fa-award" }
+                }
+            },
+            "BLEPP": {
+                id: "BLEPP",
+                title: "Psychometrician Board (BLEPP)",
+                desc: "Board Licensure Exam for Psychometrician Subjects",
+                icon: "fa-brain",
+                gradient: "from-fuchsia-950/60 via-purple-950/40 to-slate-900 border-fuchsia-500/50 hover:border-fuchsia-300",
+                badgeBg: "bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40",
+                subjects: {
+                    "ABPSYCH": { label: "Abnormal Psych", color: "bg-purple-500/20 text-purple-300 border-purple-500/30", icon: "fa-head-side-virus" },
+                    "PSYCHASSESS": { label: "Psych Assessment", color: "bg-violet-500/20 text-violet-300 border-violet-500/30", icon: "fa-clipboard-check" },
+                    "TOP": { label: "Theories of Personality", color: "bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/30", icon: "fa-masks-theater" },
+                    "INDPSYCH": { label: "Industrial Psych", color: "bg-teal-500/20 text-teal-300 border-teal-500/30", icon: "fa-building-user" }
+                }
+            },
+            "GENERAL": {
+                id: "GENERAL",
+                title: "General & Custom Exams",
+                desc: "General Review Topics & Custom JSON Imports",
+                icon: "fa-folder-open",
+                gradient: "from-slate-800/50 via-slate-900 to-slate-900 border-slate-700/80 hover:border-slate-500",
+                badgeBg: "bg-slate-800 text-slate-300 border-slate-700",
+                subjects: {}
+            }
+        };
+
+        const motivationalBank = {
+            mastery: [
+                "Phenomenal performance! You have mastered these concepts at a board-exam level.",
+                "Outstanding precision! Keep this momentum up and the board exam will be a breeze.",
+                "Top-tier result! Your consistency and accuracy are incredible."
+            ],
+            pass: [
+                "Great job! You passed the target cutoff for this drill.",
+                "Solid effort! You cleared the passing mark. Keep refining your weak spots.",
+                "Congratulations! You're on track to crush the board exam!"
+            ],
+            nearPass: [
+                "Very close! A quick review of the missed items will push you over the passing mark.",
+                "Almost there! Review your key memory anchors and retake this drill.",
+                "Good attempt! Focus on the missed concepts and try again."
+            ],
+            needsReview: [
+                "Don't get discouraged! Re-reading the explanations below will help lock in the concepts.",
+                "Mistakes are stepping stones to mastery. Review the missed items and drill again!",
+                "Keep pushing! Every practice attempt builds long-term memory."
+            ]
+        };
+
+        // GLOBAL APP STATE
+        let userDecks = [];
+        let examHistory = [];
+        let settings = {
+            passTarget: 80,
+            colorblindMode: 'none',
+            theme: 'slate',
+            fontSize: 'normal',
+            shuffleQuestions: true,
+            shuffleChoices: true
+        };
+
+        let activeCourseFolder = null;
+        let activeCategoryFilter = 'ALL';
+        let activeDeck = null;
+        let activeQuestions = [];
+        let currentIdx = 0;
+        let score = 0;
+        let streak = 0;
+        let maxStreak = 0;
+        let answered = false;
+        let missedQuestions = [];
+
+        function showToast(message, isError = false) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `px-4 py-3 rounded-xl border text-xs font-bold shadow-xl transition-all duration-300 flex items-center gap-2 pointer-events-auto ${
+                isError 
+                    ? 'bg-rose-950/90 text-rose-200 border-rose-800/80' 
+                    : 'bg-emerald-950/90 text-emerald-200 border-emerald-800/80'
+            }`;
+            toast.innerHTML = `
+                <i class="fa-solid ${isError ? 'fa-circle-exclamation text-rose-400' : 'fa-circle-check text-emerald-400'}"></i>
+                <span>${message}</span>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-10px]');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function inferCourseKey(courseRaw, catRaw) {
+            const c = (courseRaw || "").trim().toUpperCase();
+            const cat = (catRaw || "").trim().toUpperCase();
+
+            // Explicit specific course
+            if (c === "REE" || c === "LET" || c === "BLEPP") return c;
+
+            // Category based matching (highest priority for EE / MATH / ESAS etc.)
+            if (["EE", "MATH", "ESAS"].includes(cat) || cat.includes("EE") || cat.includes("ELEC") || cat.includes("MATH") || cat.includes("ESAS")) return "REE";
+            if (["GENED", "PROFED", "MAJOR"].includes(cat) || cat.includes("GEN") || cat.includes("PROF") || cat.includes("TEACH")) return "LET";
+            if (["ABPSYCH", "PSYCHASSESS", "TOP", "INDPSYCH"].includes(cat) || cat.includes("PSYCH")) return "BLEPP";
+
+            // Course string based matching
+            if (c.includes("EE") || c.includes("ELEC") || c.includes("REE") || c.includes("ENGINEER")) return "REE";
+            if (c.includes("LET") || c.includes("TEACH") || c.includes("EDUC")) return "LET";
+            if (c.includes("BLEPP") || c.includes("PSYCH")) return "BLEPP";
+
+            return "GENERAL";
+        }
+
+        function getCourseMeta(courseKey) {
+            if (coursePresets[courseKey]) return coursePresets[courseKey];
+
+            return {
+                id: courseKey,
+                title: `${courseKey} Exam Course`,
+                desc: "Custom Exam Course Folder",
+                icon: "fa-folder-open",
+                gradient: "from-slate-800/40 via-slate-900 to-slate-900 border-slate-700/80 hover:border-slate-500",
+                badgeBg: "bg-slate-800 text-slate-300 border-slate-700",
+                subjects: {}
+            };
+        }
+
+        function getCategoryMeta(courseKey, cat) {
+            const courseMeta = getCourseMeta(courseKey);
+            const key = (cat || "GENERAL").toUpperCase().replace(/[^A-Z]/g, '');
+
+            if (courseMeta.subjects && courseMeta.subjects[key]) {
+                return courseMeta.subjects[key];
+            }
+
+            return {
+                label: cat ? cat.toUpperCase() : "GENERAL",
+                color: "bg-slate-800/60 text-slate-300 border-slate-700",
+                icon: "fa-folder-open"
+            };
+        }
+
+        function populateSettingsHistory() {
+            const statsContainer = document.getElementById('settings-history-stats');
+            const listContainer = document.getElementById('settings-history-list');
+            if (!statsContainer || !listContainer) return;
+
+            if (examHistory.length === 0) {
+                statsContainer.innerHTML = '<div class="col-span-full text-slate-500 text-xs py-2 text-center">No exams taken yet. Complete a drill to see your performance stats!</div>';
+                listContainer.innerHTML = '';
+                return;
+            }
+
+            const totalTaken = examHistory.length;
+            const avgAcc = Math.round(examHistory.reduce((acc, curr) => acc + curr.accuracy, 0) / totalTaken);
+
+            const subjectStats = {};
+
+            examHistory.forEach(h => {
+                const matchingDeck = userDecks.find(d => d.id === h.id);
+                const rawCourse = matchingDeck ? matchingDeck.course : h.course;
+                const rawCat = matchingDeck ? matchingDeck.category : h.category;
+
+                const cKey = inferCourseKey(rawCourse, rawCat);
+                const catKey = (rawCat || "GENERAL").toUpperCase();
+                const groupKey = `${cKey}_${catKey}`;
+
+                if (!subjectStats[groupKey]) {
+                    subjectStats[groupKey] = {
+                        courseKey: cKey,
+                        catKey: catKey,
+                        items: []
+                    };
+                }
+                subjectStats[groupKey].items.push(h);
+            });
+
+            let lowestSubject = null;
+            let lowestAvg = 101;
+
+            Object.values(subjectStats).forEach(group => {
+                const grpAvg = Math.round(group.items.reduce((a, b) => a + b.accuracy, 0) / group.items.length);
+                group.avg = grpAvg;
+                if (grpAvg < lowestAvg) {
+                    lowestAvg = grpAvg;
+                    const cMeta = getCourseMeta(group.courseKey);
+                    const catMeta = getCategoryMeta(group.courseKey, group.catKey);
+                    lowestSubject = `${cMeta.id} (${catMeta.label})`;
+                }
+            });
+
+            statsContainer.innerHTML = `
+                <div class="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
+                    <div class="text-slate-400 mb-0.5 text-[10px]">Total Drills</div>
+                    <div class="font-extrabold text-slate-200 text-sm">${totalTaken}</div>
+                </div>
+                <div class="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
+                    <div class="text-slate-400 mb-0.5 text-[10px]">Overall Avg</div>
+                    <div class="font-extrabold text-indigo-400 text-sm">${avgAcc}%</div>
+                </div>
+                <div class="col-span-2 sm:col-span-1 bg-slate-800/50 p-2.5 rounded-xl border ${lowestAvg < 75 ? 'border-amber-500/40 bg-amber-500/5' : 'border-slate-700/50'}">
+                    <div class="text-slate-400 mb-0.5 text-[10px]">Focus Area ⚠️</div>
+                    <div class="font-bold ${lowestAvg < 75 ? 'text-amber-400' : 'text-emerald-400'} text-xs truncate" title="${lowestSubject || 'None'}">${lowestSubject || 'None'} (${lowestAvg}%)</div>
+                </div>
+            `;
+
+            const courseGrouped = {};
+            Object.values(subjectStats).forEach(group => {
+                if (!courseGrouped[group.courseKey]) {
+                    courseGrouped[group.courseKey] = [];
+                }
+                courseGrouped[group.courseKey].push(group);
+            });
+
+            let html = '';
+            Object.keys(courseGrouped).forEach(cKey => {
+                const cMeta = getCourseMeta(cKey);
+                const subjects = courseGrouped[cKey];
+
+                html += `
+                    <div class="bg-slate-950/80 border border-slate-800/90 rounded-xl p-3 space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                            <span class="font-bold text-xs text-white flex items-center gap-1.5">
+                                <i class="fa-solid ${cMeta.icon} text-indigo-400"></i>
+                                <span>${cMeta.title}</span>
+                            </span>
+                            <span class="text-[10px] text-slate-400 font-medium">${subjects.reduce((sum, s) => sum + s.items.length, 0)} Attempts</span>
+                        </div>
+                        <div class="space-y-2.5">
+                `;
+
+                subjects.forEach(sub => {
+                    const catMeta = getCategoryMeta(cKey, sub.catKey);
+                    const isWeak = sub.avg < 75;
+
+                    html += `
+                        <div class="bg-slate-900/90 rounded-lg p-2.5 border border-slate-800/80 space-y-2">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="px-2 py-0.5 rounded-md text-[11px] font-bold border ${catMeta.color} flex items-center gap-1">
+                                    <i class="fa-solid ${catMeta.icon}"></i>
+                                    <span>${catMeta.label}</span>
+                                </span>
+                                <div class="flex items-center gap-2">
+                                    ${isWeak ? '<span class="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">Needs Focus</span>' : ''}
+                                    <span class="font-black text-xs ${sub.avg >= 80 ? 'text-emerald-400' : sub.avg >= 70 ? 'text-amber-400' : 'text-rose-400'}">${sub.avg}% Avg</span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-1.5 pt-1 pl-1 border-t border-slate-800/50">
+                    `;
+
+                    sub.items.slice().reverse().forEach(item => {
+                        const dateStr = item.date ? new Date(item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+                        html += `
+                            <div class="flex items-center justify-between text-[11px] text-slate-300 py-1 px-2 bg-slate-950/60 rounded border border-slate-800/40 hover:border-slate-700 transition-colors">
+                                <div class="truncate max-w-[170px] sm:max-w-[210px] font-medium" title="${item.title}">${item.title}</div>
+                                <div class="flex items-center gap-2 shrink-0 font-bold">
+                                    <span class="text-[10px] text-slate-500 font-normal">${dateStr}</span>
+                                    <span class="${item.passed ? 'text-emerald-400' : 'text-rose-400'}">${item.accuracy}%</span>
+                                    <span class="text-[10px] text-slate-400 font-normal">(${item.score} pts)</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            listContainer.innerHTML = html;
+        }
+
+        function togglePasteModal() {
+            const modal = document.getElementById('paste-json-modal');
+            if (modal) modal.classList.toggle('hidden');
+        }
+
+        function toggleSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            if (modal) {
+                modal.classList.toggle('hidden');
+                if (!modal.classList.contains('hidden')) {
+                    populateSettingsHistory();
+                }
+            }
+        }
+
+        function loadHistory() {
+            try {
+                const hist = localStorage.getItem('ee_simulator_history');
+                if (hist) examHistory = JSON.parse(hist);
+            } catch(e) {}
+        }
+
+        function updateSessionPassTarget(val) {
+            settings.passTarget = parseInt(val, 10) || 80;
+            const passDisplay = document.getElementById('pass-target-display');
+            if (passDisplay) passDisplay.textContent = `${settings.passTarget}%`;
+            saveSettings();
+        }
+
+        function updateShuffleFromStartCard(type, checked) {
+            if (type === 'q') settings.shuffleQuestions = checked;
+            if (type === 'c') settings.shuffleChoices = checked;
+            saveSettings();
+        }
+
+        function saveSettings() {
+            const passSlider = document.getElementById('pass-target-slider');
+            const colorblindSelect = document.getElementById('colorblind-select');
+            const themeSelect = document.getElementById('theme-select');
+            const fontsizeSelect = document.getElementById('fontsize-select');
+            const shuffleQ = document.getElementById('shuffle-q-toggle');
+            const shuffleC = document.getElementById('shuffle-c-toggle');
+
+            if (passSlider) settings.passTarget = parseInt(passSlider.value, 10);
+            if (colorblindSelect) settings.colorblindMode = colorblindSelect.value;
+            if (themeSelect) settings.theme = themeSelect.value;
+            if (fontsizeSelect) settings.fontSize = fontsizeSelect.value;
+            if (shuffleQ) settings.shuffleQuestions = shuffleQ.checked;
+            if (shuffleC) settings.shuffleChoices = shuffleC.checked;
+
+            localStorage.setItem('ee_simulator_settings', JSON.stringify(settings));
+            updateLiveTheme();
+        }
+
+        function loadSettings() {
+            try {
+                const stored = localStorage.getItem('ee_simulator_settings');
+                if (stored) {
+                    settings = { ...settings, ...JSON.parse(stored) };
+                }
+            } catch(e) {}
+
+            const passSlider = document.getElementById('pass-target-slider');
+            const passDisplay = document.getElementById('pass-target-display');
+            const targetDropdown = document.getElementById('session-target-dropdown');
+            const colorblindSelect = document.getElementById('colorblind-select');
+            const themeSelect = document.getElementById('theme-select');
+            const fontsizeSelect = document.getElementById('fontsize-select');
+            const shuffleQ = document.getElementById('shuffle-q-toggle');
+            const shuffleC = document.getElementById('shuffle-c-toggle');
+            const startShuffleQ = document.getElementById('start-shuffle-q-toggle');
+            const startShuffleC = document.getElementById('start-shuffle-c-toggle');
+
+            if (passSlider) passSlider.value = settings.passTarget;
+            if (passDisplay) passDisplay.textContent = `${settings.passTarget}%`;
+            if (targetDropdown) targetDropdown.value = settings.passTarget;
+            if (colorblindSelect) colorblindSelect.value = settings.colorblindMode;
+            if (themeSelect) themeSelect.value = settings.theme;
+            if (fontsizeSelect) fontsizeSelect.value = settings.fontSize;
+            if (shuffleQ) shuffleQ.checked = settings.shuffleQuestions;
+            if (shuffleC) shuffleC.checked = settings.shuffleChoices;
+            if (startShuffleQ) startShuffleQ.checked = settings.shuffleQuestions;
+            if (startShuffleC) startShuffleC.checked = settings.shuffleChoices;
+
+            updateLiveTheme();
+        }
+
+        function updateLiveTheme() {
+            const colorblindSelect = document.getElementById('colorblind-select');
+            const themeSelect = document.getElementById('theme-select');
+            const fontsizeSelect = document.getElementById('fontsize-select');
+
+            const cb = colorblindSelect ? colorblindSelect.value : settings.colorblindMode;
+            const th = themeSelect ? themeSelect.value : settings.theme;
+            const fs = fontsizeSelect ? fontsizeSelect.value : settings.fontSize;
+
+            settings.colorblindMode = cb;
+            settings.theme = th;
+            settings.fontSize = fs;
+
+            document.body.classList.remove(
+                'cb-deuteranopia', 'cb-tritanopia', 'cb-highcontrast',
+                'theme-cyber', 'theme-matrix', 'theme-oled',
+                'fs-small', 'fs-large', 'fs-xlarge'
+            );
+
+            if (cb !== 'none') document.body.classList.add(`cb-${cb}`);
+            if (th !== 'slate') document.body.classList.add(`theme-${th}`);
+            if (fs !== 'normal') document.body.classList.add(`fs-${fs}`);
+        }
+
+        function parseJsonSafely(rawString) {
+            if (!rawString || typeof rawString !== 'string') return null;
+            let cleaned = rawString.trim();
+
+            if (cleaned.charCodeAt(0) === 0xFEFF) {
+                cleaned = cleaned.slice(1);
+            }
+
+            if (cleaned.startsWith('```')) {
+                cleaned = cleaned.replace(/^```[a-zA-Z]*\n?/, '').replace(/```$/, '').trim();
+            }
+
+            cleaned = cleaned.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+
+            try {
+                return JSON.parse(cleaned);
+            } catch (err1) {
+                try {
+                    let sanitized = cleaned
+                        .replace(/,\s*([\]}])/g, '$1')
+                        .replace(/\\([^"\\\/bfnrtu])/g, '\\\\$1');
+
+                    return JSON.parse(sanitized);
+                } catch (err2) {
+                    try {
+                        const relaxed = new Function('return ' + cleaned)();
+                        if (relaxed && typeof relaxed === 'object') return relaxed;
+                    } catch (err3) {
+                        return null;
+                    }
+                }
+            }
+            return null;
+        }
+
+        function validateAndSanitizeDeck(deckObj) {
+            if (!deckObj || typeof deckObj !== 'object') return null;
+            if (!deckObj.title || !deckObj.questions || !Array.isArray(deckObj.questions) || deckObj.questions.length === 0) {
+                return null;
+            }
+
+            deckObj.id = deckObj.id || ("custom_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7));
+            deckObj.course = inferCourseKey(deckObj.course, deckObj.category);
+            deckObj.category = (deckObj.category || "GENERAL").toUpperCase();
+
+            deckObj.questions = deckObj.questions.map((q, i) => ({
+                q: q.q || q.question || `Question ${i + 1}`,
+                options: Array.isArray(q.options) ? q.options : ["Option A", "Option B", "Option C", "Option D"],
+                correct: typeof q.correct === 'number' ? q.correct : 0,
+                keyword: q.keyword || "",
+                because: q.because || q.explanation || "No explanation provided."
+            }));
+
+            return deckObj;
+        }
+
+        function saveImportedDeckObj(importedObj) {
+            let decksToImport = [];
+
+            if (Array.isArray(importedObj)) {
+                importedObj.forEach(d => {
+                    const sanitized = validateAndSanitizeDeck(d);
+                    if (sanitized) decksToImport.push(sanitized);
+                });
+            } else {
+                const sanitized = validateAndSanitizeDeck(importedObj);
+                if (sanitized) decksToImport.push(sanitized);
+            }
+
+            if (decksToImport.length === 0) {
+                showToast("Invalid JSON: Deck must contain 'title' and a non-empty 'questions' array.", true);
+                return false;
+            }
+
+            let addedCount = 0;
+            decksToImport.forEach(newDeck => {
+                const existingIdx = userDecks.findIndex(d => d.id === newDeck.id);
+                if (existingIdx >= 0) {
+                    userDecks[existingIdx] = newDeck;
+                } else {
+                    userDecks.push(newDeck);
+                }
+                addedCount++;
+            });
+
+            localStorage.setItem('ee_simulator_user_decks', JSON.stringify(userDecks));
+
+            const lastDeck = decksToImport[decksToImport.length - 1];
+            activeCourseFolder = lastDeck.course;
+            activeCategoryFilter = lastDeck.category;
+            renderDeckHub();
+            showToast(`Successfully imported ${addedCount} study deck${addedCount > 1 ? 's' : ''}!`);
+            return true;
+        }
+
+        function importJsonDeck(event) {
+            const input = event.target;
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                const parsed = parseJsonSafely(text);
+                if (parsed) {
+                    saveImportedDeckObj(parsed);
+                } else {
+                    showToast("Failed to parse JSON file. Check for missing brackets/quotes.", true);
+                }
+                input.value = '';
+            };
+            reader.onerror = () => {
+                showToast("Error reading file.", true);
+                input.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function processPastedJson() {
+            const rawText = document.getElementById('paste-json-input').value.trim();
+            if (!rawText) {
+                showToast("Please paste JSON text into the box.", true);
+                return;
+            }
+
+            const parsed = parseJsonSafely(rawText);
+            if (parsed) {
+                if (saveImportedDeckObj(parsed)) {
+                    document.getElementById('paste-json-input').value = '';
+                    togglePasteModal();
+                }
+            } else {
+                showToast("Invalid JSON structure. Ensure your JSON format matches requirements.", true);
+            }
+        }
+
+        function loadDecksFromStorage() {
+            try {
+                const stored = localStorage.getItem('ee_simulator_user_decks');
+                if (stored) {
+                    userDecks = JSON.parse(stored);
+                } else {
+                    userDecks = [];
+                }
+            } catch(e) {
+                userDecks = [];
+            }
+
+            userDecks.forEach(d => {
+                d.course = inferCourseKey(d.course, d.category);
+                d.category = (d.category || "GENERAL").toUpperCase();
+            });
+        }
+
+        function showDeckHub() {
+            document.getElementById('deck-hub-screen').classList.remove('hidden');
+            document.getElementById('start-card').classList.add('hidden');
+            document.getElementById('quiz-card').classList.add('hidden');
+            document.getElementById('quiz-card').classList.remove('flex');
+            document.getElementById('results-card').classList.add('hidden');
+            document.getElementById('hud-stats').classList.add('hidden');
+            document.getElementById('hud-stats').classList.remove('flex');
+
+            if (activeCourseFolder) {
+                const courseMeta = getCourseMeta(activeCourseFolder);
+                document.getElementById('deck-subtitle').textContent = courseMeta.title;
+            } else {
+                document.getElementById('deck-subtitle').textContent = "Multi-Course & Multi-Subject Drill Engine";
+            }
+
+            renderDeckHub();
+        }
+
+        function openCourseFolder(courseKey) {
+            activeCourseFolder = courseKey;
+            activeCategoryFilter = "ALL";
+            showDeckHub();
+        }
+
+        function exitToFolderList() {
+            activeCourseFolder = null;
+            activeCategoryFilter = "ALL";
+            showDeckHub();
+        }
+
+        function goHome() {
+            activeCourseFolder = null;
+            activeCategoryFilter = "ALL";
+            showDeckHub();
+        }
+
+        function setCategoryFilter(category) {
+            activeCategoryFilter = category;
+            renderDeckHub();
+        }
+
+        function renderDeckHub() {
+            const container = document.getElementById('decks-container');
+            const tabsContainer = document.getElementById('dynamic-filter-tabs');
+            const breadcrumb = document.getElementById('hub-breadcrumb');
+
+            if (!container || !tabsContainer || !breadcrumb) return;
+
+            container.innerHTML = '';
+            tabsContainer.innerHTML = '';
+
+            // LEVEL 1: ROOT VIEW
+            if (!activeCourseFolder) {
+                tabsContainer.classList.add('hidden');
+                breadcrumb.innerHTML = `
+                    <div class="flex items-center gap-2 text-indigo-400">
+                        <i class="fa-solid fa-folder text-base"></i>
+                        <span>Root / Course Folders</span>
+                    </div>
+                    <span class="text-slate-500 font-normal">Select a course to view subjects</span>
+                `;
+
+                const courseCounts = {};
+                userDecks.forEach(d => {
+                    const cKey = inferCourseKey(d.course, d.category);
+                    courseCounts[cKey] = (courseCounts[cKey] || 0) + 1;
+                });
+
+                const availableCourses = new Set([...Object.keys(coursePresets), ...Object.keys(courseCounts)]);
+
+                availableCourses.forEach(cKey => {
+                    const count = courseCounts[cKey] || 0;
+                    const cMeta = getCourseMeta(cKey);
+
+                    const folderCard = document.createElement('div');
+                    folderCard.onclick = () => openCourseFolder(cKey);
+                    folderCard.className = `bg-gradient-to-br ${cMeta.gradient} border p-6 rounded-2xl transition-all hover:scale-[1.01] cursor-pointer group flex flex-col justify-between space-y-5 shadow-xl relative overflow-hidden`;
+
+                    folderCard.innerHTML = `
+                        <div class="flex items-start justify-between">
+                            <div class="p-3.5 bg-slate-800/80 rounded-xl border border-slate-700/60 text-2xl group-hover:scale-105 transition-transform text-white">
+                                <i class="fa-solid ${cMeta.icon}"></i>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-xs font-bold border ${cMeta.badgeBg}">
+                                ${count} ${count === 1 ? 'Deck' : 'Decks'}
+                            </span>
+                        </div>
+
+                        <div>
+                            <h3 class="font-extrabold text-xl text-white group-hover:text-indigo-300 transition-colors">${cMeta.title}</h3>
+                            <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">${cMeta.desc}</p>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold text-indigo-400 group-hover:text-indigo-300">
+                            <span>Open Course Folder</span>
+                            <i class="fa-solid fa-arrow-right group-hover:translate-x-1.5 transition-transform"></i>
+                        </div>
+                    `;
+                    container.appendChild(folderCard);
+                });
+
+                return;
+            }
+
+            // LEVEL 2: INSIDE SPECIFIC COURSE FOLDER
+            tabsContainer.classList.remove('hidden');
+            tabsContainer.classList.add('flex');
+
+            const courseMeta = getCourseMeta(activeCourseFolder);
+            const courseDecks = userDecks.filter(d => inferCourseKey(d.course, d.category) === activeCourseFolder);
+
+            const subjectCounts = { ALL: courseDecks.length };
+            courseDecks.forEach(d => {
+                const cat = (d.category || "GENERAL").toUpperCase();
+                subjectCounts[cat] = (subjectCounts[cat] || 0) + 1;
+            });
+
+            const availableSubjects = Object.keys(subjectCounts);
+            availableSubjects.forEach(cat => {
+                const isSelected = activeCategoryFilter === cat;
+                const meta = getCategoryMeta(activeCourseFolder, cat);
+                const count = subjectCounts[cat];
+
+                const btn = document.createElement('button');
+                btn.onclick = () => setCategoryFilter(cat);
+                btn.className = isSelected 
+                    ? "px-4 py-2.5 rounded-xl transition-all bg-indigo-600 text-white shadow-md shadow-indigo-600/20 flex items-center gap-2 shrink-0 font-extrabold"
+                    : "px-4 py-2.5 rounded-xl transition-all bg-slate-800/90 text-slate-400 hover:bg-slate-700 hover:text-slate-200 border border-slate-700/60 flex items-center gap-2 shrink-0 font-bold";
+
+                btn.innerHTML = `
+                    <i class="fa-solid ${cat === 'ALL' ? 'fa-border-all' : meta.icon}"></i>
+                    <span>${cat === 'ALL' ? 'All Subjects' : meta.label}</span>
+                    <span class="bg-slate-900/60 px-2 py-0.5 rounded-md text-[11px]">${count}</span>
+                `;
+                tabsContainer.appendChild(btn);
+            });
+
+            const filteredDecks = courseDecks.filter(d => {
+                if (activeCategoryFilter === 'ALL') return true;
+                return (d.category || "GENERAL").toUpperCase() === activeCategoryFilter;
+            });
+            
+            const sectionDecks = filteredDecks.map(d => d.id);
+            const sectionHist = examHistory.filter(h => sectionDecks.includes(h.id));
+            let sectionStatHtml = '';
+            if (sectionHist.length > 0) {
+                 const avg = Math.round(sectionHist.reduce((acc, curr) => acc + curr.accuracy, 0) / sectionHist.length);
+                 sectionStatHtml = `<div class="text-[11px] bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-xl font-extrabold border border-indigo-500/30 flex items-center gap-1.5 shadow-inner"><i class="fa-solid fa-chart-line"></i> Section Avg: ${avg}%</div>`;
+            }
+
+            breadcrumb.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <button onclick="exitToFolderList()" class="text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors">
+                        <i class="fa-solid fa-house text-xs"></i>
+                        <span class="hidden sm:inline">Courses</span>
+                    </button>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i>
+                    <div class="flex items-center gap-2 text-indigo-400 font-extrabold">
+                        <i class="fa-solid ${courseMeta.icon}"></i>
+                        <span class="truncate max-w-[140px] sm:max-w-none">${courseMeta.title}</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    ${sectionStatHtml}
+                    ${activeCategoryFilter !== 'ALL' ? `
+                        <button onclick="deleteEntireSubject('${activeCourseFolder}', '${activeCategoryFilter}')" class="text-xs text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1 rounded-lg border border-rose-500/30 flex items-center gap-1.5 transition-all" title="Remove Subject">
+                            <i class="fa-solid fa-trash-can"></i>
+                            <span class="hidden sm:inline">Remove Subject</span>
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+
+            if (filteredDecks.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full p-10 text-center bg-slate-900/60 rounded-2xl border border-slate-800 space-y-3">
+                        <i class="fa-solid fa-folder-open text-4xl text-slate-600"></i>
+                        <h3 class="font-bold text-slate-300 text-base">No Study Decks Found in this Folder</h3>
+                        <p class="text-xs text-slate-500 max-w-sm mx-auto">Tap "Import JSON File" or "Paste JSON" above to add your first drill for this section!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredDecks.forEach((deck) => {
+                const originalIndex = userDecks.indexOf(deck);
+                const catKey = (deck.category || 'General').toUpperCase();
+                const catMeta = getCategoryMeta(activeCourseFolder, catKey);
+
+                const courseMetaObj = getCourseMeta(activeCourseFolder);
+                const presetSubjects = courseMetaObj.subjects || {};
+                const presetKeys = Object.keys(presetSubjects);
+                const isPreset = presetKeys.includes(catKey);
+
+                let optionsHtml = '';
+                presetKeys.forEach(pKey => {
+                    const label = presetSubjects[pKey].label || pKey;
+                    optionsHtml += `<option value="${pKey}" ${catKey === pKey ? 'selected' : ''}>${pKey} (${label})</option>`;
+                });
+                optionsHtml += `<option value="CUSTOM" ${!isPreset ? 'selected' : ''}>+ Custom Subject...</option>`;
+
+                const deckHist = examHistory.filter(h => h.id === deck.id);
+                let historyBadge = '';
+                if (deckHist.length > 0) {
+                    const bestAcc = Math.max(...deckHist.map(h => h.accuracy));
+                    historyBadge = `<div class="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold"><i class="fa-solid fa-trophy text-[11px]"></i> Best: ${bestAcc}%</div>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = "bg-slate-900 border border-slate-800/90 hover:border-indigo-500/50 p-6 rounded-2xl transition-all hover:scale-[1.01] flex flex-col justify-between group cursor-pointer space-y-4 shadow-xl relative";
+                
+                card.onclick = (e) => {
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.closest('.category-picker') || e.target.closest('.delete-btn')) return;
+                    selectDeck(originalIndex);
+                };
+
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="px-3 py-1 rounded-xl text-xs font-bold border ${catMeta.color} flex items-center gap-1.5">
+                                <i class="fa-solid ${catMeta.icon}"></i>
+                                <span>${catMeta.label}</span>
+                            </span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold px-3 py-1 bg-slate-800/80 text-slate-400 rounded-full border border-slate-700/60">${deck.questions ? deck.questions.length : 0} Items</span>
+                                <button onclick="deleteDeck(event, ${originalIndex})" class="delete-btn text-slate-600 hover:text-rose-400 p-1 transition-colors" title="Delete Deck">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-lg text-slate-100 group-hover:text-indigo-300 transition-colors">${deck.title}</h3>
+                            <p class="text-xs text-slate-400 leading-relaxed line-clamp-2 mt-1.5">${deck.desc || 'No description provided.'}</p>
+                            ${historyBadge}
+                        </div>
+                    </div>
+                    
+                    <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs flex-wrap gap-2">
+                        <div class="category-picker flex items-center gap-1.5 text-xs text-slate-500" title="Select or edit Subject">
+                            <span>Subject:</span>
+                            <select onchange="handleSubjectSelectChange(${originalIndex}, this.value)" class="bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2 py-1 font-bold text-xs focus:outline-none focus:border-indigo-500 cursor-pointer">
+                                ${optionsHtml}
+                            </select>
+                            <input type="text" id="custom-cat-input-${originalIndex}" value="${!isPreset ? catKey : ''}" placeholder="Enter subject..." onchange="updateDeckCategory(${originalIndex}, this.value)" class="${!isPreset ? '' : 'hidden'} bg-slate-800 text-indigo-300 border border-indigo-500/50 rounded-lg px-2 py-0.5 font-bold text-xs w-28 focus:outline-none focus:border-indigo-400">
+                        </div>
+
+                        <div class="text-indigo-400 font-bold flex items-center gap-1.5">
+                            <span>Start Practice</span>
+                            <i class="fa-solid fa-arrow-right group-hover:translate-x-1.5 transition-transform"></i>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function deleteDeck(event, idx) {
+            event.stopPropagation();
+            if (confirm("Are you sure you want to delete this study deck?")) {
+                userDecks.splice(idx, 1);
+                localStorage.setItem('ee_simulator_user_decks', JSON.stringify(userDecks));
+                renderDeckHub();
+                showToast("Deck deleted successfully.");
+            }
+        }
+
+        function deleteEntireSubject(courseKey, categoryKey) {
+            if (confirm(`Are you sure you want to remove all study decks under subject "${categoryKey}" in course "${courseKey}"?`)) {
+                userDecks = userDecks.filter(d => {
+                    const cKey = inferCourseKey(d.course, d.category);
+                    const cat = (d.category || "GENERAL").toUpperCase();
+                    return !(cKey === courseKey && cat === categoryKey);
+                });
+                localStorage.setItem('ee_simulator_user_decks', JSON.stringify(userDecks));
+                activeCategoryFilter = "ALL";
+                renderDeckHub();
+                showToast(`Subject "${categoryKey}" and its decks were removed successfully.`);
+            }
+        }
+
+        function handleSubjectSelectChange(deckIdx, val) {
+            if (val === 'CUSTOM') {
+                const input = document.getElementById(`custom-cat-input-${deckIdx}`);
+                if (input) {
+                    input.classList.remove('hidden');
+                    input.focus();
+                    input.select();
+                }
+            } else {
+                updateDeckCategory(deckIdx, val);
+            }
+        }
+
+        function updateDeckCategory(deckIdx, newCat) {
+            const cleaned = (newCat || "GENERAL").trim().toUpperCase();
+            if (!cleaned) return;
+            userDecks[deckIdx].category = cleaned;
+            userDecks[deckIdx].course = inferCourseKey(userDecks[deckIdx].course, cleaned);
+            localStorage.setItem('ee_simulator_user_decks', JSON.stringify(userDecks));
+            renderDeckHub();
+        }
+
+        function selectDeck(idx) {
+            if (!userDecks[idx]) return;
+            activeDeck = userDecks[idx];
+
+            document.getElementById('active-deck-title').textContent = activeDeck.title;
+            document.getElementById('active-deck-desc').textContent = activeDeck.desc || 'No description provided.';
+            document.getElementById('active-deck-count').textContent = `${activeDeck.questions ? activeDeck.questions.length : 0} Items`;
+
+            // Deck History Breakdown in Start Card
+            const deckHist = examHistory.filter(h => h.id === activeDeck.id);
+            const historyBox = document.getElementById('start-card-history');
+            
+            if (deckHist.length > 0) {
+                const totalAttempts = deckHist.length;
+                const bestAccuracy = Math.max(...deckHist.map(h => h.accuracy));
+                const lastAttempt = deckHist[deckHist.length - 1];
+
+                historyBox.innerHTML = `
+                    <div class="flex items-center justify-between text-xs font-bold text-slate-300">
+                        <span class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-clock-rotate-left text-indigo-400"></i>
+                            <span>Past Drill Attempts</span>
+                        </span>
+                        <span class="text-indigo-400">${totalAttempts} Completed</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+                        <div class="bg-slate-900/80 p-2 rounded-lg border border-slate-700/50">
+                            <div class="text-slate-400 text-[10px]">Best Accuracy</div>
+                            <div class="font-extrabold text-emerald-400 text-sm">${bestAccuracy}%</div>
+                        </div>
+                        <div class="bg-slate-900/80 p-2 rounded-lg border border-slate-700/50">
+                            <div class="text-slate-400 text-[10px]">Last Attempt Score</div>
+                            <div class="font-extrabold text-amber-300 text-sm">${lastAttempt.score} pts (${lastAttempt.accuracy}%)</div>
+                        </div>
+                    </div>
+                `;
+                historyBox.classList.remove('hidden');
+            } else {
+                historyBox.classList.add('hidden');
+            }
+
+            document.getElementById('deck-hub-screen').classList.add('hidden');
+            document.getElementById('start-card').classList.remove('hidden');
+            
+            const cMeta = getCourseMeta(activeDeck.course);
+            document.getElementById('deck-subtitle').textContent = `[${cMeta.title}] ${activeDeck.title}`;
+
+            checkSavedSession();
+        }
+
+        function getSessionKey() {
+            return activeDeck ? `ee_sim_session_${activeDeck.id || activeDeck.title}` : null;
+        }
+
+        function checkSavedSession() {
+            const key = getSessionKey();
+            const savedRaw = localStorage.getItem(key);
+            const banner = document.getElementById('saved-session-banner');
+            const continueBtn = document.getElementById('btn-continue-session');
+
+            if (savedRaw) {
+                try {
+                    const saved = JSON.parse(savedRaw);
+                    if (saved && saved.activeQuestions && saved.currentIdx < saved.activeQuestions.length) {
+                        const total = saved.activeQuestions.length;
+                        const pct = Math.round((saved.currentIdx / total) * 100);
+                        const missed = saved.missedQuestions ? saved.missedQuestions.length : 0;
+                        const correct = saved.currentIdx - missed;
+
+                        document.getElementById('saved-progress-percent').textContent = `${pct}%`;
+                        document.getElementById('saved-progress-bar').style.width = `${Math.max(pct, 4)}%`;
+                        document.getElementById('saved-q-num').textContent = `${saved.currentIdx + 1}/${total}`;
+                        document.getElementById('saved-score').textContent = saved.score || 0;
+                        document.getElementById('saved-correct').textContent = correct >= 0 ? correct : 0;
+                        document.getElementById('saved-missed').textContent = missed;
+
+                        banner.classList.remove('hidden');
+                        continueBtn.disabled = false;
+                        continueBtn.title = "Resume your saved progress";
+                        return;
+                    }
+                } catch(e) {}
+            }
+
+            banner.classList.add('hidden');
+            continueBtn.disabled = true;
+            continueBtn.title = "No active session saved for this deck";
+        }
+
+        function saveSession() {
+            const key = getSessionKey();
+            if (!key) return;
+
+            const sessionData = {
+                deckId: activeDeck.id,
+                currentIdx: currentIdx,
+                score: score,
+                streak: streak,
+                maxStreak: maxStreak,
+                missedQuestions: missedQuestions,
+                activeQuestions: activeQuestions
+            };
+
+            localStorage.setItem(key, JSON.stringify(sessionData));
+        }
+
+        function clearSession() {
+            const key = getSessionKey();
+            if (key) localStorage.removeItem(key);
+        }
+
+        function continueSession() {
+            const key = getSessionKey();
+            const savedRaw = localStorage.getItem(key);
+            if (!savedRaw) return;
+
+            const saved = JSON.parse(savedRaw);
+            activeQuestions = saved.activeQuestions;
+            currentIdx = saved.currentIdx;
+            score = saved.score;
+            streak = saved.streak;
+            maxStreak = saved.maxStreak;
+            missedQuestions = saved.missedQuestions || [];
+
+            document.getElementById('start-card').classList.add('hidden');
+            document.getElementById('results-card').classList.add('hidden');
+            document.getElementById('quiz-card').classList.remove('hidden');
+            document.getElementById('quiz-card').classList.add('flex');
+            document.getElementById('hud-stats').classList.remove('hidden');
+            document.getElementById('hud-stats').classList.add('flex');
+
+            document.getElementById('total-q-num').textContent = activeQuestions.length;
+            updateHUD();
+            loadQuestion();
+        }
+
+        function updateHUD() {
+            document.getElementById('score-display').textContent = score;
+            document.getElementById('streak-display').textContent = streak;
+            document.getElementById('current-q-num').textContent = currentIdx + 1;
+
+            if (activeQuestions && activeQuestions.length > 0) {
+                const pct = Math.round(((currentIdx) / activeQuestions.length) * 100);
+                document.getElementById('progress-bar').style.width = `${Math.max(pct, 3)}%`;
+                document.getElementById('progress-percent').textContent = `${pct}%`;
+            }
+        }
+
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function prepareQuestions() {
+            let prepared = activeDeck.questions.map(q => {
+                let options = [...q.options];
+                let correctText = options[q.correct];
+
+                if (settings.shuffleChoices) {
+                    options = shuffleArray(options);
+                }
+
+                return {
+                    q: q.q,
+                    options: options,
+                    correct: options.indexOf(correctText),
+                    keyword: q.keyword || "",
+                    because: q.because || "No explanation provided."
+                };
+            });
+
+            if (settings.shuffleQuestions) {
+                prepared = shuffleArray(prepared);
+            }
+
+            return prepared;
+        }
+
+        function startQuiz() {
+            clearSession();
+
+            document.getElementById('start-card').classList.add('hidden');
+            document.getElementById('results-card').classList.add('hidden');
+            document.getElementById('quiz-card').classList.remove('hidden');
+            document.getElementById('quiz-card').classList.add('flex');
+            document.getElementById('hud-stats').classList.remove('hidden');
+            document.getElementById('hud-stats').classList.add('flex');
+
+            activeQuestions = prepareQuestions();
+            currentIdx = 0;
+            score = 0;
+            streak = 0;
+            maxStreak = 0;
+            missedQuestions = [];
+
+            document.getElementById('total-q-num').textContent = activeQuestions.length;
+            updateHUD();
+            loadQuestion();
+            saveSession();
+        }
+
+        function loadQuestion() {
+            answered = false;
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('explanation-box').classList.add('hidden');
+
+            const q = activeQuestions[currentIdx];
+            document.getElementById('question-text').textContent = `${currentIdx + 1}. ${q.q}`;
+
+            const choicesContainer = document.getElementById('choices-container');
+            choicesContainer.innerHTML = '';
+
+            const letters = ['A', 'B', 'C', 'D'];
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left p-3.5 sm:p-4 rounded-xl border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.99]`;
+                btn.onclick = () => selectOption(idx);
+
+                btn.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 flex items-center justify-center font-bold text-xs group-hover:border-indigo-500 group-hover:text-indigo-400 transition-colors">
+                            ${letters[idx]}
+                        </span>
+                        <span class="text-slate-200 text-sm font-medium leading-snug">${opt}</span>
+                    </div>
+                    <i class="fa-regular fa-circle text-slate-600 group-hover:text-slate-400 text-sm"></i>
+                `;
+                choicesContainer.appendChild(btn);
+            });
+
+            updateHUD();
+        }
+
+        function selectOption(selectedIdx) {
+            if (answered) return;
+            answered = true;
+
+            const q = activeQuestions[currentIdx];
+            const buttons = document.getElementById('choices-container').children;
+            const isCorrect = (selectedIdx === q.correct);
+
+            const explanationBox = document.getElementById('explanation-box');
+            const explanationTitle = document.getElementById('explanation-title');
+            const explanationText = document.getElementById('explanation-text');
+            const keywordBadge = document.getElementById('keyword-badge-question');
+            const keywordText = document.getElementById('keyword-text-question');
+            const nextBtn = document.getElementById('next-btn');
+
+            if (q.keyword) {
+                keywordText.textContent = q.keyword;
+                keywordBadge.classList.remove('hidden');
+            } else {
+                keywordBadge.classList.add('hidden');
+            }
+
+            if (isCorrect) {
+                streak++;
+                if (streak > maxStreak) maxStreak = streak;
+                const pointsGained = 100 + (streak * 10);
+                score += pointsGained;
+
+                buttons[selectedIdx].className = "w-full text-left p-3.5 sm:p-4 rounded-xl border-2 border-emerald-500 bg-emerald-500/10 text-emerald-300 flex items-center justify-between font-medium";
+                buttons[selectedIdx].querySelector('i').className = "fa-solid fa-circle-check text-emerald-400 text-base";
+
+                explanationBox.className = "p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 text-sm leading-relaxed space-y-2";
+                explanationTitle.className = "flex items-center gap-2 font-bold text-emerald-400";
+                explanationTitle.innerHTML = `<i class="fa-solid fa-circle-check"></i> CORRECT (+${pointsGained} pts)`;
+            } else {
+                streak = 0;
+                missedQuestions.push({
+                    num: currentIdx + 1,
+                    question: q.q,
+                    userAns: q.options[selectedIdx],
+                    correctAns: q.options[q.correct],
+                    keyword: q.keyword,
+                    because: q.because
+                });
+
+                buttons[selectedIdx].className = "w-full text-left p-3.5 sm:p-4 rounded-xl border-2 border-rose-500 bg-rose-500/10 text-rose-300 flex items-center justify-between font-medium";
+                buttons[selectedIdx].querySelector('i').className = "fa-solid fa-circle-xmark text-rose-400 text-base";
+                buttons[q.correct].className = "w-full text-left p-3.5 sm:p-4 rounded-xl border-2 border-emerald-500/80 bg-emerald-500/10 text-emerald-300 flex items-center justify-between font-medium";
+
+                explanationBox.className = "p-4 rounded-xl border border-rose-500/30 bg-rose-500/5 text-sm leading-relaxed space-y-2";
+                explanationTitle.className = "flex items-center gap-2 font-bold text-rose-400";
+                explanationTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> INCORRECT`;
+            }
+
+            for (let btn of buttons) {
+                btn.onclick = null;
+                btn.classList.remove('hover:bg-slate-800', 'group');
+            }
+
+            explanationText.innerHTML = `<b>Correct Answer:</b> ${q.options[q.correct]}<br><br><b>BECAUSE:</b> ${q.because}`;
+            explanationBox.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+            nextBtn.classList.add('inline-flex');
+
+            updateHUD();
+            saveSession();
+        }
+
+        function nextQuestion() {
+            currentIdx++;
+            if (currentIdx < activeQuestions.length) {
+                saveSession();
+                loadQuestion();
+            } else {
+                clearSession();
+                showResults();
+            }
+        }
+
+        function getRandomMotivation(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+
+        function showResults() {
+            document.getElementById('quiz-card').classList.add('hidden');
+            document.getElementById('quiz-card').classList.remove('flex');
+            document.getElementById('results-card').classList.remove('hidden');
+            document.getElementById('hud-stats').classList.add('hidden');
+
+            const totalQ = activeQuestions.length;
+            const correctCount = totalQ - missedQuestions.length;
+            const accuracy = Math.round((correctCount / totalQ) * 100);
+            const passTarget = settings.passTarget;
+            const isPassed = accuracy >= passTarget;
+            
+            const deckCourse = inferCourseKey(activeDeck.course, activeDeck.category);
+            const deckCat = (activeDeck.category || "GENERAL").toUpperCase();
+
+            examHistory.push({
+                id: activeDeck.id,
+                title: activeDeck.title,
+                course: deckCourse,
+                category: deckCat,
+                date: new Date().getTime(),
+                score: score,
+                totalQ: totalQ,
+                accuracy: accuracy,
+                passed: isPassed
+            });
+            localStorage.setItem('ee_simulator_history', JSON.stringify(examHistory));
+
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('final-accuracy').textContent = `${accuracy}%`;
+
+            const statusBadge = document.getElementById('final-status-badge');
+            const badgeIcon = document.getElementById('badge-icon');
+            const resultsTitle = document.getElementById('results-title');
+            const motivationBox = document.getElementById('motivation-box');
+
+            let message = "";
+
+            if (accuracy >= 90) {
+                statusBadge.textContent = "PASSED (EXCELLENT)";
+                statusBadge.className = "text-xl font-black text-emerald-400";
+                badgeIcon.className = "inline-flex p-4 rounded-full text-4xl mb-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
+                resultsTitle.textContent = "Board Exam Ready! ⚡";
+                message = getRandomMotivation(motivationalBank.mastery);
+            } else if (isPassed) {
+                statusBadge.textContent = "PASSED";
+                statusBadge.className = "text-xl font-black text-emerald-400";
+                badgeIcon.className = "inline-flex p-4 rounded-full text-4xl mb-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/30";
+                resultsTitle.textContent = "Target Cleared! 🎯";
+                message = getRandomMotivation(motivationalBank.pass);
+            } else if (accuracy >= (passTarget - 15)) {
+                statusBadge.textContent = "NEAR PASS";
+                statusBadge.className = "text-xl font-black text-amber-400";
+                badgeIcon.className = "inline-flex p-4 rounded-full text-4xl mb-1 bg-amber-500/10 text-amber-400 border border-amber-500/30";
+                resultsTitle.textContent = "Almost There! 📈";
+                message = getRandomMotivation(motivationalBank.nearPass);
+            } else {
+                statusBadge.textContent = "NEEDS REVIEW";
+                statusBadge.className = "text-xl font-black text-rose-400";
+                badgeIcon.className = "inline-flex p-4 rounded-full text-4xl mb-1 bg-rose-500/10 text-rose-400 border border-rose-500/30";
+                resultsTitle.textContent = "Keep Drilling! 📚";
+                message = getRandomMotivation(motivationalBank.needsReview);
+            }
+
+            motivationBox.innerHTML = `
+                <div class="flex items-start gap-2.5">
+                    <i class="fa-solid fa-quote-left text-indigo-400 text-sm mt-0.5"></i>
+                    <p class="font-medium italic">${message}</p>
+                </div>
+            `;
+
+            const missedList = document.getElementById('missed-list');
+            const missedBadge = document.getElementById('missed-count-badge');
+            missedList.innerHTML = '';
+
+            if (missedQuestions.length === 0) {
+                missedBadge.className = "px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full text-xs font-semibold";
+                missedBadge.textContent = "Perfect Score!";
+                missedList.innerHTML = `<div class="p-4 bg-slate-800/40 rounded-xl text-center text-xs text-slate-400">You got every single question right! Outstanding work!</div>`;
+            } else {
+                missedBadge.className = "px-2 py-0.5 bg-rose-500/20 text-rose-400 rounded-full text-xs font-semibold";
+                missedBadge.textContent = `${missedQuestions.length} Missed Items`;
+
+                missedQuestions.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = "p-4 bg-slate-800/50 rounded-xl border border-slate-700/40 text-xs space-y-2";
+                    div.innerHTML = `
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="font-bold text-slate-200">${item.num}. ${item.question}</div>
+                            ${item.keyword ? `<span class="shrink-0 font-bold text-[10px] px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-md border border-indigo-500/30">🔑 ${item.keyword}</span>` : ''}
+                        </div>
+                        <div class="text-rose-400">❌ Your answer: ${item.userAns}</div>
+                        <div class="text-emerald-400 font-semibold">✔ Correct answer: ${item.correctAns}</div>
+                        <div class="text-slate-400 pt-2 border-t border-slate-700/40"><b>Why:</b> ${item.because}</div>
+                    `;
+                    missedList.appendChild(div);
+                });
+            }
+        }
+
+        function initApp() {
+            loadSettings();
+            loadHistory();
+            loadDecksFromStorage();
+            showDeckHub();
+        }
+
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+    </script>
+</body>
+</html>
