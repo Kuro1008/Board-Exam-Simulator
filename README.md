@@ -3,7 +3,7 @@ Universal Board Exam Drill Simulator for REE, LET, BLEPP, etc.
 
 Board-Exam-Simulator
 
-Universal Board Exam Drill Simulator for REE, LET, BLEPP, and custom review decks[cite: 3].
+Universal Board Exam Drill Simulator for REE, LET, BLEPP, and custom review decks.
 
 🌐 Live Web App
 Access the live simulator directly in your browser:
