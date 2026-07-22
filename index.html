@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Board Exam Simulator</title>
+    <title>Master Board Exam Simulator</title>
+    <!-- Favicon Logo -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23080c14' stroke='%2338bdf8' stroke-width='4'/><path d='M50 18 L78 30 L50 42 L22 30 Z' fill='%231e40af' stroke='%23fbbf24' stroke-width='3'/><path d='M35 52 L50 64 L65 52 L65 72 C65 78 50 84 50 84 C50 84 35 78 35 72 Z' fill='%232563eb' stroke='%23fbbf24' stroke-width='3'/><path d='M42 58 L48 65 L60 53' fill='none' stroke='%23fbbf24' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/></svg>">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -79,11 +81,16 @@
     <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40">
         <div class="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between">
             <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()" title="Return to Main Course Folders Home">
-                <div class="p-2.5 bg-indigo-600/20 text-indigo-400 rounded-xl border border-indigo-500/30">
-                    <i class="fa-solid fa-graduation-cap text-lg"></i>
+                <div class="w-10 h-10 rounded-xl overflow-hidden border border-indigo-500/40 bg-indigo-600/20 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-600/20">
+                    <svg viewBox="0 0 100 100" class="w-full h-full object-cover">
+                        <circle cx="50" cy="50" r="48" fill="#080c14" stroke="#38bdf8" stroke-width="4"/>
+                        <path d="M50 18 L78 30 L50 42 L22 30 Z" fill="#1e40af" stroke="#fbbf24" stroke-width="3"/>
+                        <path d="M35 52 L50 64 L65 52 L65 72 C65 78 50 84 50 84 C50 84 35 78 35 72 Z" fill="#2563eb" stroke="#fbbf24" stroke-width="3"/>
+                        <path d="M42 58 L48 65 L60 53" fill="none" stroke="#fbbf24" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                 </div>
                 <div>
-                    <h1 class="font-extrabold text-base sm:text-lg text-slate-100 leading-tight">Universal Board Exam Simulator</h1>
+                    <h1 class="font-extrabold text-base sm:text-lg text-slate-100 leading-tight">Master Board Exam Simulator</h1>
                     <p id="deck-subtitle" class="text-xs text-slate-400 font-medium">Multi-Course & Multi-Subject Drill Engine</p>
                 </div>
             </div>
@@ -499,7 +506,7 @@
                         </div>
                         <div>
                             <label class="block text-slate-300 font-bold mb-1">Subject Code</label>
-                            <input type="text" id="ai-photo-cat-input" placeholder="e.g., EE, GENED" class="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl p-2.5 text-xs text-indigo-200 font-bold uppercase focus:outline-none focus:border-indigo-500">
+                            <input type="text" id="ai-photo-cat-input" placeholder="e.g., EE, GENED" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-indigo-200 font-bold uppercase focus:outline-none focus:border-indigo-500">
                         </div>
                     </div>
                 </div>
@@ -612,7 +619,7 @@
                             <li>Sign in using any normal Google (Gmail) account.</li>
                             <li>At the top of the Google AI Studio page, click the blue <b>"Get API key"</b> button.</li>
                             <li>Click the blue <b>"Create API key in new project"</b> button.</li>
-                            <li>Click the **Copy** icon next to your new key, come back here, and paste it into the <b>API Key</b> box above! ✨</li>
+                            <li>Click the <b>Copy</b> icon next to your new key, come back here, and paste it into the <b>API Key</b> box above! ✨</li>
                         </ol>
                     </div>
                 </div>
@@ -770,7 +777,7 @@
             const container = document.getElementById('toast-container');
             if (!container) return;
             const toast = document.createElement('div');
-            toast.className = `px-4 py-3.5 rounded-2xl border text-xs font-bold shadow-2xl transition-all duration-300 flex items-center gap-3 pointer-events-auto backdrop-blur-md animate-toast ${
+            toast.className = `px-4 py-3.5 rounded-2xl border text-xs font-bold shadow-2xl transition-all duration-300 flex items-center gap-3 pointer-events-none backdrop-blur-md animate-toast ${
                 isError 
                     ? 'bg-rose-950/90 text-rose-200 border-rose-500/50 shadow-rose-900/20' 
                     : 'bg-slate-900/95 text-emerald-300 border-emerald-500/50 shadow-emerald-900/20'
