@@ -24,7 +24,7 @@
             border-radius: 4px;
         }
 
-        /* BOUNCE POP & TOAST ANIMATIONS */
+        /* ANIMATIONS & 3D CARD FLIP */
         @keyframes bouncePop {
             0% { opacity: 0; transform: scale(0.88) translateY(12px); }
             60% { opacity: 1; transform: scale(1.02) translateY(-2px); }
@@ -40,6 +40,22 @@
         }
         .animate-toast {
             animation: toastSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* 3D FLASHCARD STYLES */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
         }
 
         /* COLORBLIND & ACCESSIBILITY MODES */
@@ -299,6 +315,7 @@
             </div>
         </div>
 
+        <!-- QUIZ CARD -->
         <div id="quiz-card" class="hidden flex-col gap-5">
             <!-- Progress Bar -->
             <div class="space-y-2">
@@ -311,13 +328,13 @@
                 </div>
             </div>
 
-            <!-- Question Card -->
+            <!-- Question Card Container -->
             <div class="bg-slate-900 border border-slate-800/90 rounded-2xl p-5 sm:p-7 shadow-xl space-y-6 relative">
                 <div id="question-text" class="text-base sm:text-xl font-semibold text-slate-100 leading-snug">
                     Loading question...
                 </div>
 
-                <!-- Choices Container -->
+                <!-- Choices / Interactive Container -->
                 <div id="choices-container" class="grid grid-cols-1 gap-3"></div>
 
                 <!-- Explanation Box -->
@@ -338,7 +355,7 @@
                 <div class="flex justify-between items-center pt-2">
                     <button onclick="showDeckHub()" class="text-xs font-semibold text-slate-500 hover:text-slate-300 underline">Quit Session</button>
                     <button id="next-btn" onclick="nextQuestion()" class="hidden px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-md shadow-indigo-600/20 items-center gap-2 text-sm">
-                        <span>Next Question</span>
+                        <span>Next Item</span>
                         <i class="fa-solid fa-chevron-right text-xs"></i>
                     </button>
                 </div>
@@ -452,10 +469,10 @@
         </div>
     </div>
 
+    <!-- SETTINGS / PREFERENCES MODAL -->
     <div id="settings-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800/90 rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl flex flex-col max-h-[88vh] animate-pop">
             
-            <!-- Sticky Modal Header -->
             <div class="flex items-center justify-between border-b border-slate-800/90 pb-3.5 shrink-0">
                 <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
                     <i class="fa-solid fa-sliders text-indigo-400"></i>
@@ -466,7 +483,6 @@
                 </button>
             </div>
 
-            <!-- Scrollable Content Container -->
             <div class="overflow-y-auto custom-scrollbar space-y-4 text-sm pr-1 py-4 flex-1">
                 <!-- Target Passing Score -->
                 <div class="bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/50 space-y-2">
@@ -548,7 +564,6 @@
                     </label>
                 </div>
 
-                <!-- SETTINGS HISTORY BREAKDOWN SECTION -->
                 <hr class="border-slate-800 my-4">
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
@@ -557,16 +572,11 @@
                         </h4>
                         <span class="text-[10px] text-slate-400 font-medium">Focus Area Analysis</span>
                     </div>
-                    <div id="settings-history-stats" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-center text-xs">
-                        <!-- Stats injected here -->
-                    </div>
-                    <div id="settings-history-list" class="space-y-3 pt-1">
-                        <!-- Subject breakdown & Deck sessions injected here -->
-                    </div>
+                    <div id="settings-history-stats" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-center text-xs"></div>
+                    <div id="settings-history-list" class="space-y-3 pt-1"></div>
                 </div>
             </div>
 
-            <!-- Sticky Modal Footer -->
             <div class="pt-3 border-t border-slate-800/90 shrink-0">
                 <button onclick="toggleSettingsModal()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all text-sm shadow-lg shadow-indigo-600/30">
                     Save & Close
@@ -686,6 +696,7 @@
         let maxStreak = 0;
         let answered = false;
         let missedQuestions = [];
+        let cardFlipped = false;
 
         function showToast(message, isError = false) {
             const container = document.getElementById('toast-container');
@@ -761,6 +772,12 @@
                 color: "bg-slate-800/60 text-slate-300 border-slate-700",
                 icon: "fa-folder-open"
             };
+        }
+
+        function isGenericOption(optStr) {
+            if (!optStr || typeof optStr !== 'string') return true;
+            const s = optStr.toLowerCase().trim();
+            return s.includes('all of the above') || s.includes('none of these') || s.includes('none of the above') || s.includes('both a and b');
         }
 
         function populateSettingsHistory() {
@@ -1338,7 +1355,6 @@
                     courseCounts[cKey] = (courseCounts[cKey] || 0) + 1;
                 });
 
-                // ALWAYS SHOW ALL PRESET COURSES REGARDLESS OF DECK COUNT
                 const defaultCourseKeys = ["REE", "LET", "BLEPP", "GENERAL"];
                 const availableCourses = new Set([...defaultCourseKeys, ...Object.keys(courseCounts)]);
 
@@ -1668,6 +1684,7 @@
         }
 
         function saveSession() {
+            if (settings.drillFormat === 'card') return; // Don't save flashcard sessions
             const key = getSessionKey();
             if (!key) return;
 
@@ -1716,8 +1733,18 @@
         }
 
         function updateHUD() {
-            document.getElementById('score-display').textContent = score;
-            document.getElementById('streak-display').textContent = streak;
+            const hudStats = document.getElementById('hud-stats');
+            if (settings.drillFormat === 'card') {
+                if (hudStats) hudStats.classList.add('hidden');
+            } else {
+                if (hudStats) {
+                    hudStats.classList.remove('hidden');
+                    hudStats.classList.add('flex');
+                }
+                document.getElementById('score-display').textContent = score;
+                document.getElementById('streak-display').textContent = streak;
+            }
+
             document.getElementById('current-q-num').textContent = currentIdx + 1;
 
             if (activeQuestions && activeQuestions.length > 0) {
@@ -1737,20 +1764,95 @@
         }
 
         function prepareQuestions() {
+            const fmt = settings.drillFormat || 'mc';
+
             let prepared = activeDeck.questions.map(q => {
                 let options = [...q.options];
-                let correctText = options[q.correct];
+                let rawCorrectOption = options[q.correct] || options[0];
+                let keyword = q.keyword || "";
 
-                if (settings.shuffleChoices) {
+                if (fmt === 'tf') {
+                    // DYNAMIC TRUE / FALSE CONVERTER
+                    const validOptions = options.filter(opt => !isGenericOption(opt));
+                    const isTrue = Math.random() < 0.5;
+
+                    let statementText = q.q;
+                    let tfCorrectIdx = isTrue ? 0 : 1; // 0 = True, 1 = False
+                    let insertedTerm = "";
+
+                    if (isTrue) {
+                        if (isGenericOption(rawCorrectOption)) {
+                            // If correct answer was "All of the above", combine valid options
+                            if (rawCorrectOption.toLowerCase().includes("all")) {
+                                insertedTerm = validOptions.join(", ");
+                            } else {
+                                insertedTerm = keyword || "a specific valid concept";
+                            }
+                        } else {
+                            insertedTerm = rawCorrectOption;
+                        }
+                    } else {
+                        // Create False Statement: pick a wrong option from valid choices
+                        const distractors = validOptions.filter(opt => opt !== rawCorrectOption);
+                        if (distractors.length > 0) {
+                            insertedTerm = distractors[Math.floor(Math.random() * distractors.length)];
+                        } else {
+                            insertedTerm = "Incorrect / Opposite Factor";
+                        }
+                    }
+
+                    // Insert into blank or format as statement
+                    if (statementText.includes("____") || statementText.includes("....")) {
+                        statementText = statementText.replace(/____|\.\.\.\./g, `"${insertedTerm}"`);
+                    } else {
+                        statementText = `Statement: ${statementText} — ${insertedTerm}`;
+                    }
+
+                    let tfBecause = "";
+                    if (isTrue) {
+                        tfBecause = `Statement is <b>TRUE</b>.<br><br><b>BECAUSE:</b> ${q.because}`;
+                    } else {
+                        tfBecause = `Statement is <b>FALSE</b>! The statement incorrectly substituted <i>"${insertedTerm}"</i>.<br><br><b>REAL CONCEPT:</b> The correct answer is <b>"${rawCorrectOption}"</b>.<br><b>BECAUSE:</b> ${q.because}`;
+                    }
+
+                    return {
+                        q: statementText,
+                        options: ["True", "False"],
+                        correct: tfCorrectIdx,
+                        keyword: keyword,
+                        because: tfBecause,
+                        originalQ: q.q
+                    };
+                }
+
+                if (fmt === 'fill') {
+                    // SMART FILL-IN-THE-BLANKS
+                    let targetAnswer = rawCorrectOption;
+                    if (isGenericOption(targetAnswer)) {
+                        targetAnswer = keyword || options.find(o => !isGenericOption(o)) || "Correct Concept";
+                    }
+
+                    return {
+                        q: q.q,
+                        options: [targetAnswer],
+                        correct: 0,
+                        keyword: keyword,
+                        because: q.because,
+                        targetFillAnswer: targetAnswer
+                    };
+                }
+
+                // MULTIPLE CHOICE OR FLASHCARD DEFAULT
+                if (settings.shuffleChoices && fmt === 'mc') {
                     options = shuffleArray(options);
                 }
 
                 return {
                     q: q.q,
                     options: options,
-                    correct: options.indexOf(correctText),
-                    keyword: q.keyword || "",
-                    because: q.because || "No explanation provided."
+                    correct: options.indexOf(rawCorrectOption),
+                    keyword: keyword,
+                    because: q.because
                 };
             });
 
@@ -1768,8 +1870,6 @@
             document.getElementById('results-card').classList.add('hidden');
             document.getElementById('quiz-card').classList.remove('hidden');
             document.getElementById('quiz-card').classList.add('flex');
-            document.getElementById('hud-stats').classList.remove('hidden');
-            document.getElementById('hud-stats').classList.add('flex');
 
             triggerPopAnimation('quiz-card');
 
@@ -1788,96 +1888,168 @@
 
         function loadQuestion() {
             answered = false;
+            cardFlipped = false;
             document.getElementById('next-btn').classList.add('hidden');
             document.getElementById('explanation-box').classList.add('hidden');
 
             const q = activeQuestions[currentIdx];
-            document.getElementById('question-text').textContent = `${currentIdx + 1}. ${q.q}`;
+            const fmt = settings.drillFormat || 'mc';
 
+            const qTextEl = document.getElementById('question-text');
             const choicesContainer = document.getElementById('choices-container');
             choicesContainer.innerHTML = '';
 
-            const fmt = settings.drillFormat || 'mc';
+            if (fmt === 'card') {
+                // 3D FLASHCARD FLIP INTERFACE
+                qTextEl.textContent = `Flashcard ${currentIdx + 1} of ${activeQuestions.length}`;
 
-            if (fmt === 'tf') {
-                const tfOptions = ["True", "False"];
-                tfOptions.forEach((opt, idx) => {
-                    const btn = document.createElement('button');
-                    btn.className = `w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.99] animate-pop`;
-                    btn.onclick = () => selectOption(idx === 0 ? q.correct : (q.correct === 0 ? 1 : 0));
+                choicesContainer.innerHTML = `
+                    <div class="perspective-1000 w-full min-h-[260px] my-2 cursor-pointer" onclick="flipFlashcard()">
+                        <div id="flashcard-inner" class="relative w-full h-full transform-style-3d bg-slate-950 border border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl transition-transform duration-500 min-h-[260px]">
+                            
+                            <!-- Front Side -->
+                            <div class="backface-hidden w-full h-full flex flex-col justify-between space-y-4">
+                                <div class="flex items-center justify-between text-xs text-indigo-400 font-bold uppercase tracking-wider">
+                                    <span><i class="fa-solid fa-clone mr-1.5"></i> Flashcard Front</span>
+                                    <span class="text-slate-500 font-normal">Tap card to flip <i class="fa-solid fa-rotate text-[10px] ml-1"></i></span>
+                                </div>
+                                <div class="text-base sm:text-xl font-semibold text-slate-100 leading-relaxed text-center py-4 flex-1 flex items-center justify-center">
+                                    ${q.q}
+                                </div>
+                                <div class="text-center text-xs text-slate-500 font-medium">Click to reveal answer & explanation</div>
+                            </div>
 
-                    btn.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <span class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 flex items-center justify-center font-extrabold text-xs">
-                                ${opt === "True" ? "T" : "F"}
-                            </span>
-                            <span class="text-slate-200 text-base font-bold">${opt}</span>
+                            <!-- Back Side -->
+                            <div class="backface-hidden rotate-y-180 absolute inset-0 w-full h-full bg-slate-900 border border-indigo-500/40 rounded-2xl p-6 sm:p-8 flex flex-col justify-between space-y-4 overflow-y-auto custom-scrollbar">
+                                <div class="flex items-center justify-between text-xs text-emerald-400 font-bold uppercase tracking-wider">
+                                    <span><i class="fa-solid fa-circle-check mr-1.5"></i> Correct Concept Answer</span>
+                                    ${q.keyword ? `<span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[11px]">🔑 ${q.keyword}</span>` : ''}
+                                </div>
+                                <div class="text-lg sm:text-2xl font-black text-emerald-300 text-center py-2">
+                                    ${q.options[q.correct]}
+                                </div>
+                                <div class="text-xs sm:text-sm text-slate-300 border-t border-slate-800 pt-3 leading-relaxed text-left">
+                                    <b>BECAUSE:</b> ${q.because}
+                                </div>
+                            </div>
                         </div>
-                        <i class="fa-regular fa-circle text-slate-600 text-sm"></i>
-                    `;
-                    choicesContainer.appendChild(btn);
-                });
-            } else if (fmt === 'fill') {
-                choicesContainer.innerHTML = `
-                    <div class="space-y-3 animate-pop">
-                        <input type="text" id="fill-input" placeholder="Type your answer here..." onkeydown="if(event.key==='Enter') checkFillAnswer()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm font-bold text-slate-100 focus:outline-none focus:border-indigo-500">
-                        <button onclick="checkFillAnswer()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all text-xs sm:text-sm shadow-md">
-                            Submit Answer
-                        </button>
                     </div>
-                `;
-            } else if (fmt === 'card') {
-                choicesContainer.innerHTML = `
-                    <div class="bg-slate-950 border border-slate-800/80 p-8 rounded-2xl text-center space-y-4 animate-pop">
-                        <div class="text-xs text-slate-500 font-bold uppercase tracking-wider">Answer Reveal</div>
-                        <div id="card-answer" class="hidden text-lg font-bold text-emerald-400">${q.options[q.correct]}</div>
-                        <button id="card-reveal-btn" onclick="revealFlashcardAnswer()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition-all shadow-md">
-                            Show Answer
+
+                    <div class="flex items-center justify-between gap-3 pt-2">
+                        <button onclick="prevFlashcard()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-chevron-left"></i> Previous
+                        </button>
+                        <button onclick="flipFlashcard()" class="px-5 py-2.5 bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/40 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-rotate"></i> Flip Card
+                        </button>
+                        <button onclick="nextFlashcard()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md">
+                            Next Card <i class="fa-solid fa-chevron-right"></i>
                         </button>
                     </div>
                 `;
             } else {
-                // MULTIPLE CHOICE DEFAULT
-                const letters = ['A', 'B', 'C', 'D'];
-                q.options.forEach((opt, idx) => {
-                    const btn = document.createElement('button');
-                    btn.className = `w-full text-left p-3.5 sm:p-4 rounded-xl border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.99] animate-pop`;
-                    btn.onclick = () => selectOption(idx);
+                qTextEl.textContent = `${currentIdx + 1}. ${q.q}`;
 
-                    btn.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <span class="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 flex items-center justify-center font-bold text-xs group-hover:border-indigo-500 group-hover:text-indigo-400 transition-colors">
-                                ${letters[idx]}
-                            </span>
-                            <span class="text-slate-200 text-sm font-medium leading-snug">${opt}</span>
+                if (fmt === 'tf') {
+                    const tfOptions = ["True", "False"];
+                    tfOptions.forEach((opt, idx) => {
+                        const btn = document.createElement('button');
+                        btn.className = `w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.99] animate-pop`;
+                        btn.onclick = () => selectOption(idx);
+
+                        btn.innerHTML = `
+                            <div class="flex items-center gap-3">
+                                <span class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 flex items-center justify-center font-extrabold text-xs">
+                                    ${opt === "True" ? "T" : "F"}
+                                </span>
+                                <span class="text-slate-200 text-base font-bold">${opt}</span>
+                            </div>
+                            <i class="fa-regular fa-circle text-slate-600 text-sm"></i>
+                        `;
+                        choicesContainer.appendChild(btn);
+                    });
+                } else if (fmt === 'fill') {
+                    choicesContainer.innerHTML = `
+                        <div class="space-y-3 animate-pop">
+                            <input type="text" id="fill-input" placeholder="Type the key concept/term here..." onkeydown="if(event.key==='Enter') checkFillAnswer()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm font-bold text-slate-100 focus:outline-none focus:border-indigo-500 shadow-inner">
+                            <button onclick="checkFillAnswer()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all text-xs sm:text-sm shadow-md flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-paper-plane text-xs"></i>
+                                <span>Submit Answer</span>
+                            </button>
                         </div>
-                        <i class="fa-regular fa-circle text-slate-600 group-hover:text-slate-400 text-sm"></i>
                     `;
-                    choicesContainer.appendChild(btn);
-                });
+                    setTimeout(() => {
+                        const input = document.getElementById('fill-input');
+                        if (input) input.focus();
+                    }, 100);
+                } else {
+                    // MULTIPLE CHOICE DEFAULT
+                    const letters = ['A', 'B', 'C', 'D'];
+                    q.options.forEach((opt, idx) => {
+                        const btn = document.createElement('button');
+                        btn.className = `w-full text-left p-3.5 sm:p-4 rounded-xl border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.99] animate-pop`;
+                        btn.onclick = () => selectOption(idx);
+
+                        btn.innerHTML = `
+                            <div class="flex items-center gap-3">
+                                <span class="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 flex items-center justify-center font-bold text-xs group-hover:border-indigo-500 group-hover:text-indigo-400 transition-colors">
+                                    ${letters[idx]}
+                                </span>
+                                <span class="text-slate-200 text-sm font-medium leading-snug">${opt}</span>
+                            </div>
+                            <i class="fa-regular fa-circle text-slate-600 group-hover:text-slate-400 text-sm"></i>
+                        `;
+                        choicesContainer.appendChild(btn);
+                    });
+                }
             }
 
             updateHUD();
         }
 
-        function checkFillAnswer() {
-            const input = document.getElementById('fill-input');
-            if (!input || !input.value.trim()) return;
-            const q = activeQuestions[currentIdx];
-            const correctText = q.options[q.correct].toLowerCase().trim();
-            const userText = input.value.toLowerCase().trim();
-
-            selectOption(userText === correctText ? q.correct : -1);
+        function flipFlashcard() {
+            const inner = document.getElementById('flashcard-inner');
+            if (inner) {
+                cardFlipped = !cardFlipped;
+                if (cardFlipped) {
+                    inner.classList.add('rotate-y-180');
+                } else {
+                    inner.classList.remove('rotate-y-180');
+                }
+            }
         }
 
-        function revealFlashcardAnswer() {
-            const cardAns = document.getElementById('card-answer');
-            const revealBtn = document.getElementById('card-reveal-btn');
-            if (cardAns && revealBtn) {
-                cardAns.classList.remove('hidden');
-                revealBtn.classList.add('hidden');
-                selectOption(activeQuestions[currentIdx].correct);
+        function prevFlashcard() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                loadQuestion();
+            } else {
+                showToast("This is the first card.");
             }
+        }
+
+        function nextFlashcard() {
+            currentIdx++;
+            if (currentIdx < activeQuestions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function checkFillAnswer() {
+            const input = document.getElementById('fill-input');
+            if (!input || !input.value.trim()) {
+                showToast("Please type an answer before submitting.", true);
+                return;
+            }
+            const q = activeQuestions[currentIdx];
+            const targetAns = (q.targetFillAnswer || q.options[q.correct] || "").toLowerCase().trim();
+            const userText = input.value.toLowerCase().trim();
+
+            const isMatch = (userText === targetAns) || (targetAns.length > 3 && userText.includes(targetAns)) || (userText.length > 3 && targetAns.includes(userText));
+
+            selectOption(isMatch ? q.correct : -1);
         }
 
         function selectOption(selectedIdx) {
@@ -1885,7 +2057,8 @@
             answered = true;
 
             const q = activeQuestions[currentIdx];
-            const buttons = document.getElementById('choices-container').children;
+            const choicesContainer = document.getElementById('choices-container');
+            const buttons = choicesContainer.children;
             const isCorrect = (selectedIdx === q.correct);
 
             const explanationBox = document.getElementById('explanation-box');
@@ -1923,7 +2096,7 @@
                     num: currentIdx + 1,
                     question: q.q,
                     userAns: selectedIdx >= 0 ? q.options[selectedIdx] : "Written Input / Missed",
-                    correctAns: q.options[q.correct],
+                    correctAns: q.options[q.correct] || q.targetFillAnswer || "Correct Concept",
                     keyword: q.keyword,
                     because: q.because
                 });
@@ -1947,7 +2120,7 @@
                 btn.classList.remove('hover:bg-slate-800', 'group');
             }
 
-            explanationText.innerHTML = `<b>Correct Answer:</b> ${q.options[q.correct]}<br><br><b>BECAUSE:</b> ${q.because}`;
+            explanationText.innerHTML = `<b>Correct Concept:</b> ${q.options[q.correct] || q.targetFillAnswer}<br><br>${q.because}`;
             explanationBox.classList.remove('hidden');
             nextBtn.classList.remove('hidden');
             nextBtn.classList.add('inline-flex');
@@ -1988,18 +2161,21 @@
             const deckCourse = inferCourseKey(activeDeck.course, activeDeck.category);
             const deckCat = (activeDeck.category || "GENERAL").toUpperCase();
 
-            examHistory.push({
-                id: activeDeck.id,
-                title: activeDeck.title,
-                course: deckCourse,
-                category: deckCat,
-                date: new Date().getTime(),
-                score: score,
-                totalQ: totalQ,
-                accuracy: accuracy,
-                passed: isPassed
-            });
-            localStorage.setItem('ee_simulator_history', JSON.stringify(examHistory));
+            // EXCLUDE FLASHCARDS FROM EXAM HISTORY RECORDS
+            if (settings.drillFormat !== 'card') {
+                examHistory.push({
+                    id: activeDeck.id,
+                    title: activeDeck.title,
+                    course: deckCourse,
+                    category: deckCat,
+                    date: new Date().getTime(),
+                    score: score,
+                    totalQ: totalQ,
+                    accuracy: accuracy,
+                    passed: isPassed
+                });
+                localStorage.setItem('ee_simulator_history', JSON.stringify(examHistory));
+            }
 
             document.getElementById('final-score').textContent = score;
             document.getElementById('final-accuracy').textContent = `${accuracy}%`;
@@ -2011,7 +2187,13 @@
 
             let message = "";
 
-            if (accuracy >= 90) {
+            if (settings.drillFormat === 'card') {
+                statusBadge.textContent = "FLASHCARD REVIEW COMPLETE";
+                statusBadge.className = "text-xl font-black text-indigo-400";
+                badgeIcon.className = "inline-flex p-4 rounded-full text-4xl mb-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/30";
+                resultsTitle.textContent = "Flashcard Deck Reviewed! 🎴";
+                message = "Great flashcard session! Flashcard runs are stress-free memory builders and do not affect your formal exam history grades.";
+            } else if (accuracy >= 90) {
                 statusBadge.textContent = "PASSED (EXCELLENT)";
                 statusBadge.className = "text-xl font-black text-emerald-400";
                 badgeIcon.className = "inline-flex p-4 rounded-full text-4xl mb-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
@@ -2051,7 +2233,7 @@
             if (missedQuestions.length === 0) {
                 missedBadge.className = "px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full text-xs font-semibold";
                 missedBadge.textContent = "Perfect Score!";
-                missedList.innerHTML = `<div class="p-4 bg-slate-800/40 rounded-xl text-center text-xs text-slate-400">You got every single question right! Outstanding work!</div>`;
+                missedList.innerHTML = `<div class="p-4 bg-slate-800/40 rounded-xl text-center text-xs text-slate-400">You got every single item right! Outstanding work!</div>`;
             } else {
                 missedBadge.className = "px-2 py-0.5 bg-rose-500/20 text-rose-400 rounded-full text-xs font-semibold";
                 missedBadge.textContent = `${missedQuestions.length} Missed Items`;
