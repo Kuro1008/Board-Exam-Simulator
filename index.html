@@ -7,6 +7,12 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- PDF.js library for client-side PDF parsing & OCR rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- KaTeX for beautiful math & fraction rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         body {
@@ -24,7 +30,7 @@
             border-radius: 4px;
         }
 
-        /* ANIMATIONS & 3D CARD FLIP */
+        /* ANIMATIONS */
         @keyframes bouncePop {
             0% { opacity: 0; transform: scale(0.88) translateY(12px); }
             60% { opacity: 1; transform: scale(1.02) translateY(-2px); }
@@ -42,71 +48,28 @@
             animation: toastSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        /* 3D FLASHCARD STYLES */
-        .perspective-1000 {
-            perspective: 1000px;
-        }
-        .transform-style-3d {
-            transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .backface-hidden {
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-        }
-        .rotate-y-180 {
-            transform: rotateY(180deg);
-        }
-
         /* COLORBLIND & ACCESSIBILITY MODES */
         body.cb-deuteranopia .text-emerald-400, body.cb-deuteranopia .text-emerald-300 { color: #38bdf8 !important; }
         body.cb-deuteranopia .bg-emerald-600, body.cb-deuteranopia .bg-emerald-500 { background-color: #0284c7 !important; } 
         body.cb-deuteranopia .border-emerald-500 { border-color: #38bdf8 !important; }
         body.cb-deuteranopia .text-rose-400, body.cb-deuteranopia .text-rose-300 { color: #f59e0b !important; }
         body.cb-deuteranopia .border-rose-500 { border-color: #f59e0b !important; }
-        body.cb-deuteranopia .bg-rose-500\/10 { background-color: rgba(245, 158, 11, 0.15) !important; }
-
-        body.cb-tritanopia .text-emerald-400, body.cb-tritanopia .text-emerald-300 { color: #2dd4bf !important; }
-        body.cb-tritanopia .text-rose-400, body.cb-tritanopia .text-rose-300 { color: #f43f5e !important; }
-        body.cb-tritanopia .border-rose-500 { border-color: #f43f5e !important; }
 
         body.cb-highcontrast { background-color: #000000 !important; color: #ffffff !important; }
         body.cb-highcontrast .bg-slate-900, body.cb-highcontrast .bg-slate-950 { background-color: #050505 !important; border-color: #444 !important; }
-        body.cb-highcontrast .text-slate-400 { color: #d1d5db !important; }
 
         /* APP THEMES */
         body.theme-cyber { background-color: #0d0714 !important; }
         body.theme-cyber header { background-color: #170d28 !important; border-color: #2e1a4f !important; }
         body.theme-cyber .bg-slate-900 { background-color: #160c26 !important; border-color: #2e1a4f !important; }
-        body.theme-cyber .bg-slate-800 { background-color: #23133d !important; }
 
         body.theme-matrix { background-color: #020d08 !important; }
         body.theme-matrix header { background-color: #061f14 !important; border-color: #0d3a25 !important; }
         body.theme-matrix .bg-slate-900 { background-color: #051a10 !important; border-color: #0d3a25 !important; }
-        body.theme-matrix .bg-slate-800 { background-color: #0a2d1d !important; }
 
         body.theme-oled { background-color: #000000 !important; }
         body.theme-oled header { background-color: #000000 !important; border-color: #1f2937 !important; }
         body.theme-oled .bg-slate-900 { background-color: #080808 !important; border-color: #1f2937 !important; }
-        body.theme-oled .bg-slate-800 { background-color: #121212 !important; }
-
-        /* FONT SIZE ACCESSIBILITY */
-        body.fs-small { font-size: 13px !important; }
-        body.fs-small #question-text { font-size: 1rem !important; }
-        body.fs-small .text-sm { font-size: 0.75rem !important; }
-
-        body.fs-large { font-size: 18px !important; }
-        body.fs-large #question-text { font-size: 1.45rem !important; }
-        body.fs-large #choices-container button span { font-size: 1.05rem !important; }
-        body.fs-large .text-xs { font-size: 0.85rem !important; }
-        body.fs-large .text-sm { font-size: 1.05rem !important; }
-
-        body.fs-xlarge { font-size: 21px !important; }
-        body.fs-xlarge #question-text { font-size: 1.8rem !important; }
-        body.fs-xlarge #choices-container button span { font-size: 1.25rem !important; }
-        body.fs-xlarge .text-xs { font-size: 0.95rem !important; }
-        body.fs-xlarge .text-sm { font-size: 1.2rem !important; }
-        body.fs-xlarge .text-base { font-size: 1.35rem !important; }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
@@ -114,6 +77,7 @@
     <!-- Toast Notification Banner -->
     <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2.5 pointer-events-none max-w-sm w-full px-4"></div>
 
+    <!-- Header -->
     <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40">
         <div class="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between">
             <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()" title="Return to Main Course Folders Home">
@@ -127,13 +91,11 @@
             </div>
             
             <div class="flex items-center gap-2 sm:gap-4">
-                <!-- Settings Button -->
                 <button onclick="toggleSettingsModal()" class="px-3.5 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700/60 transition-all text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md">
                     <i class="fa-solid fa-sliders text-indigo-400"></i>
                     <span class="hidden sm:inline">Settings</span>
                 </button>
 
-                <!-- HUD Stats -->
                 <div id="hud-stats" class="hidden items-center gap-2 sm:gap-3 text-xs sm:text-sm">
                     <div class="bg-slate-800/90 px-3 py-1.5 rounded-xl border border-slate-700/60 flex items-center gap-1.5">
                         <i class="fa-solid fa-trophy text-amber-400"></i>
@@ -148,12 +110,11 @@
         </div>
     </header>
 
+    <!-- Main Container -->
     <main class="max-w-5xl mx-auto px-4 py-8 w-full flex-1 flex flex-col justify-center">
 
-        <!-- DECK HUB (COURSE FOLDERS & SUBJECT SECTIONS) -->
+        <!-- DECK HUB -->
         <div id="deck-hub-screen" class="space-y-6">
-            
-            <!-- Top Action Header -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h2 class="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2.5">
@@ -163,7 +124,12 @@
                     <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Organized by Exam Course (REE, LET, BLEPP) & Subject Sections</p>
                 </div>
                 
-                <div class="flex items-center gap-2.5 shrink-0">
+                <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
+                    <button onclick="toggleAiModal()" class="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold rounded-xl transition-all text-xs sm:text-sm shadow-lg shadow-indigo-600/30 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-300 animate-pulse"></i>
+                        <span>AI Generator & Scanner</span>
+                    </button>
+
                     <button onclick="togglePasteModal()" class="px-4 py-2.5 bg-slate-800/90 hover:bg-slate-700 text-slate-200 font-bold rounded-xl transition-all text-xs sm:text-sm border border-slate-700/70 flex items-center gap-2 shadow-md">
                         <i class="fa-solid fa-paste text-indigo-400"></i>
                         <span>Paste JSON</span>
@@ -177,46 +143,36 @@
                 </div>
             </div>
 
-            <!-- BREADCRUMB & NAVIGATION BAR -->
-            <div id="hub-breadcrumb" class="flex items-center justify-between text-xs sm:text-sm font-bold bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800/90 shadow-md">
-                <!-- Dynamically updated breadcrumbs -->
-            </div>
+            <div id="hub-breadcrumb" class="flex items-center justify-between text-xs sm:text-sm font-bold bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800/90 shadow-md"></div>
 
-            <!-- Dynamic Category Filter Tabs -->
-            <div id="dynamic-filter-tabs" class="hidden items-center gap-2.5 overflow-x-auto pb-1 custom-scrollbar text-xs sm:text-sm font-bold">
-                <!-- Dynamically generated subject filter category buttons -->
-            </div>
+            <div id="dynamic-filter-tabs" class="hidden items-center gap-2.5 overflow-x-auto pb-1 custom-scrollbar text-xs sm:text-sm font-bold"></div>
 
-            <!-- Course Folders OR Decks Container -->
-            <div id="decks-container" class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <!-- Dynamic Course Folders or Deck Cards Loaded Here -->
-            </div>
+            <div id="decks-container" class="grid grid-cols-1 sm:grid-cols-2 gap-5"></div>
         </div>
 
         <!-- DECK START CARD -->
-        <div id="start-card" class="hidden bg-slate-900 border border-slate-800/90 rounded-2xl p-6 sm:p-10 text-center shadow-2xl relative overflow-hidden">
+        <div id="start-card" class="hidden bg-slate-900 border border-slate-800/90 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden max-w-3xl mx-auto w-full">
             <button onclick="showDeckHub()" class="absolute top-4 left-4 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 transition-colors">
                 <i class="fa-solid fa-arrow-left"></i> Back to Decks
             </button>
-            <div class="mt-4 inline-flex p-4 bg-indigo-500/10 text-indigo-400 rounded-2xl mb-4 border border-indigo-500/20 text-3xl">
+            <div class="mt-4 inline-flex p-3.5 bg-indigo-500/10 text-indigo-400 rounded-2xl mb-3 border border-indigo-500/20 text-3xl">
                 <i class="fa-solid fa-book-bookmark"></i>
             </div>
             <h2 id="active-deck-title" class="text-2xl sm:text-3xl font-extrabold text-white mb-2">Topic Title</h2>
-            <p id="active-deck-desc" class="text-slate-400 text-sm max-w-lg mx-auto mb-6 leading-relaxed">Topic description goes here.</p>
+            <p id="active-deck-desc" class="text-slate-400 text-xs sm:text-sm max-w-2xl mx-auto mb-6 leading-relaxed">Topic description goes here.</p>
 
-            <div class="grid grid-cols-3 gap-3 max-w-md mx-auto mb-6 text-left text-xs sm:text-sm">
-                <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/40">
-                    <div class="text-slate-400 mb-1">Questions</div>
-                    <div id="active-deck-count" class="font-bold text-slate-200 text-base">0 Items</div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto mb-5 text-left text-xs sm:text-sm">
+                <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/40 flex flex-col justify-center">
+                    <div class="text-slate-400 text-[11px] mb-1">Questions</div>
+                    <div id="active-deck-count" class="font-bold text-slate-200 text-sm sm:text-base">0 Items</div>
                 </div>
 
-                <!-- DRILL FORMAT DROPDOWN -->
-                <div class="bg-slate-800/50 p-2.5 rounded-xl border border-indigo-500/30 flex flex-col justify-center">
+                <div class="bg-slate-800/50 p-2.5 sm:p-3 rounded-xl border border-indigo-500/30 flex flex-col justify-center">
                     <div class="text-slate-400 text-[11px] mb-1 flex items-center justify-between">
                         <span>Format</span>
                         <i class="fa-solid fa-layer-group text-indigo-400 text-[10px]"></i>
                     </div>
-                    <select id="drill-format-dropdown" onchange="updateDrillFormat(this.value)" class="bg-slate-900 text-indigo-300 font-extrabold text-xs sm:text-sm rounded-lg px-1.5 py-1 border border-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                    <select id="drill-format-dropdown" onchange="updateDrillFormat(this.value)" class="bg-slate-900 text-indigo-300 font-extrabold text-xs sm:text-sm rounded-lg px-2 py-1.5 border border-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer w-full">
                         <option value="mc" selected>Multiple Choice</option>
                         <option value="tf">True / False</option>
                         <option value="fill">Fill in the Blanks</option>
@@ -224,13 +180,12 @@
                     </select>
                 </div>
 
-                <!-- TARGET PASS DROPDOWN -->
-                <div class="bg-slate-800/50 p-2.5 rounded-xl border border-indigo-500/30 flex flex-col justify-center">
+                <div class="bg-slate-800/50 p-2.5 sm:p-3 rounded-xl border border-indigo-500/30 flex flex-col justify-center">
                     <div class="text-slate-400 text-[11px] mb-1 flex items-center justify-between">
                         <span>Target Pass</span>
                         <i class="fa-solid fa-bullseye text-indigo-400 text-[10px]"></i>
                     </div>
-                    <select id="session-target-dropdown" onchange="updateSessionPassTarget(this.value)" class="bg-slate-900 text-emerald-400 font-extrabold text-xs sm:text-sm rounded-lg px-1.5 py-1 border border-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                    <select id="session-target-dropdown" onchange="updateSessionPassTarget(this.value)" class="bg-slate-900 text-emerald-400 font-extrabold text-xs sm:text-sm rounded-lg px-2 py-1.5 border border-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer w-full">
                         <option value="50">50% (Easy)</option>
                         <option value="70">70% (Passing)</option>
                         <option value="80" selected>80% (Board Standard)</option>
@@ -240,47 +195,20 @@
                 </div>
             </div>
 
-            <!-- CLICKABLE DECK HISTORY SUMMARY CARD -->
-            <div id="start-card-history" onclick="toggleHistoryDetailsModal()" class="max-w-md mx-auto mb-6 bg-slate-800/40 hover:bg-slate-800/70 p-4 rounded-xl border border-slate-700/50 text-left space-y-2 hidden cursor-pointer transition-all hover:scale-[1.01] group shadow-md">
-                <!-- Dynamically injected preview summary -->
-            </div>
-
-            <!-- SAVED SESSION PROGRESS DASHBOARD -->
-            <div id="saved-session-banner" class="max-w-md mx-auto mb-6 bg-slate-950/80 border border-slate-800 rounded-xl p-4 text-left space-y-3">
+            <div id="saved-session-banner" class="max-w-2xl mx-auto mb-5 bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-left space-y-3 hidden">
                 <div class="flex items-center justify-between text-xs">
                     <span class="font-bold text-slate-300 flex items-center gap-1.5">
                         <i class="fa-solid fa-bookmark text-indigo-400"></i>
                         <span>Saved Progress Found</span>
                     </span>
-                    <span id="saved-progress-percent" class="font-bold text-indigo-400">0%</span>
+                    <span id="saved-session-badge-hint" class="text-[11px] font-bold text-indigo-300 bg-indigo-500/10 px-2.5 py-0.5 rounded-md border border-indigo-500/30">
+                        Tap a session to select
+                    </span>
                 </div>
-
-                <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700/30">
-                    <div id="saved-progress-bar" class="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full transition-all duration-300 w-[0%]"></div>
-                </div>
-
-                <div class="grid grid-cols-4 gap-2 text-center text-[11px] pt-1">
-                    <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
-                        <div class="text-slate-500 text-[10px]">At Question</div>
-                        <div id="saved-q-num" class="font-bold text-slate-200">1/35</div>
-                    </div>
-                    <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
-                        <div class="text-slate-500 text-[10px]">Score</div>
-                        <div id="saved-score" class="font-bold text-amber-400">0</div>
-                    </div>
-                    <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
-                        <div class="text-slate-500 text-[10px]">Correct</div>
-                        <div id="saved-correct" class="font-bold text-emerald-400">0</div>
-                    </div>
-                    <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
-                        <div class="text-slate-500 text-[10px]">Missed</div>
-                        <div id="saved-missed" class="font-bold text-rose-400">0</div>
-                    </div>
-                </div>
+                <div id="saved-formats-container" class="flex flex-col gap-2 pt-0.5"></div>
             </div>
 
-            <!-- QUICK SHUFFLE TOGGLES -->
-            <div class="max-w-md mx-auto mb-6 bg-slate-800/40 p-3.5 rounded-xl border border-slate-800/80 text-left space-y-2 text-xs">
+            <div class="max-w-2xl mx-auto mb-5 bg-slate-800/40 p-3.5 rounded-xl border border-slate-800/80 text-left space-y-2 text-xs">
                 <div class="font-bold text-slate-300 mb-1 flex items-center gap-1.5">
                     <i class="fa-solid fa-shuffle text-indigo-400"></i>
                     <span>Deck Randomization Settings</span>
@@ -301,9 +229,8 @@
                 </div>
             </div>
 
-            <!-- START / CONTINUE ACTION BUTTONS -->
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
-                <button id="btn-continue-session" onclick="continueSession()" class="w-full sm:flex-1 px-5 py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:hover:bg-emerald-600 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 text-xs sm:text-sm">
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-2xl mx-auto">
+                <button id="btn-continue-session" onclick="continueSession()" disabled class="w-full sm:flex-1 px-5 py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:hover:bg-emerald-600 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 text-xs sm:text-sm">
                     <i class="fa-solid fa-play"></i>
                     <span>Continue Session</span>
                 </button>
@@ -317,7 +244,6 @@
 
         <!-- QUIZ CARD -->
         <div id="quiz-card" class="hidden flex-col gap-5">
-            <!-- Progress Bar -->
             <div class="space-y-2">
                 <div class="flex justify-between text-xs text-slate-400 font-medium px-1">
                     <span>Question <span id="current-q-num" class="text-indigo-400 font-bold">1</span> of <span id="total-q-num">35</span></span>
@@ -328,17 +254,14 @@
                 </div>
             </div>
 
-            <!-- Question Card Container -->
             <div class="bg-slate-900 border border-slate-800/90 rounded-2xl p-5 sm:p-7 shadow-xl space-y-6 relative">
                 <div id="question-text" class="text-base sm:text-xl font-semibold text-slate-100 leading-snug">
                     Loading question...
                 </div>
 
-                <!-- Choices / Interactive Container -->
                 <div id="choices-container" class="grid grid-cols-1 gap-3"></div>
 
-                <!-- Explanation Box -->
-                <div id="explanation-box" class="hidden p-4 rounded-xl border text-sm leading-relaxed transition-all space-y-2">
+                <div id="explanation-box" class="hidden p-4 rounded-xl border text-sm leading-relaxed transition-all space-y-3">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2 font-bold" id="explanation-title">
                             <i class="fa-solid fa-circle-info"></i>
@@ -349,9 +272,17 @@
                         </span>
                     </div>
                     <div id="explanation-text" class="text-slate-300"></div>
+
+                    <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+                        <span class="text-xs text-slate-400">Need formula breakdown or fraction steps?</span>
+                        <button id="ai-deep-dive-btn" onclick="askAiTutorForDeepDive()" class="px-3.5 py-1.5 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/40 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
+                            <span>✨ AI Deep Dive Tutor</span>
+                        </button>
+                    </div>
+                    <div id="ai-tutor-output" class="hidden p-3 bg-slate-950/80 rounded-xl border border-indigo-500/30 text-xs text-indigo-200 leading-relaxed font-mono space-y-2"></div>
                 </div>
 
-                <!-- Next Button -->
                 <div class="flex justify-between items-center pt-2">
                     <button onclick="showDeckHub()" class="text-xs font-semibold text-slate-500 hover:text-slate-300 underline">Quit Session</button>
                     <button id="next-btn" onclick="nextQuestion()" class="hidden px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-md shadow-indigo-600/20 items-center gap-2 text-sm">
@@ -370,12 +301,9 @@
                 </div>
                 <h2 class="text-2xl sm:text-3xl font-extrabold text-white" id="results-title">Quiz Completed!</h2>
                 
-                <div id="motivation-box" class="bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-4 max-w-lg mx-auto text-xs sm:text-sm text-indigo-200 leading-relaxed shadow-inner">
-                    <!-- Dynamic motivational text loaded here -->
-                </div>
+                <div id="motivation-box" class="bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-4 max-w-lg mx-auto text-xs sm:text-sm text-indigo-200 leading-relaxed shadow-inner"></div>
             </div>
 
-            <!-- Score Cards Grid -->
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50 text-center">
                     <div class="text-xs text-slate-400 mb-1">Final Score</div>
@@ -391,7 +319,6 @@
                 </div>
             </div>
 
-            <!-- Review Missed Questions & Keyword Anchors -->
             <div id="review-section" class="space-y-3 pt-2">
                 <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
                     <span>Missed Items & Key Memory Anchors</span>
@@ -414,33 +341,7 @@
 
     </main>
 
-    <!-- DETAILED PAST ATTEMPTS MODAL -->
-    <div id="history-details-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800/90 rounded-2xl p-5 sm:p-6 max-w-lg w-full shadow-2xl flex flex-col max-h-[85vh] animate-pop">
-            
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3.5 shrink-0">
-                <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
-                    <i class="fa-solid fa-chart-pie text-indigo-400"></i>
-                    <span>Detailed Performance Stats</span>
-                </h3>
-                <button onclick="toggleHistoryDetailsModal()" class="text-slate-400 hover:text-white p-1 transition-colors">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <div class="overflow-y-auto custom-scrollbar space-y-4 text-xs sm:text-sm pr-1 py-4 flex-1" id="history-details-content">
-                <!-- Detailed attempt breakdown injected here -->
-            </div>
-
-            <div class="pt-3 border-t border-slate-800/90 shrink-0">
-                <button onclick="toggleHistoryDetailsModal()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all text-xs sm:text-sm shadow-lg shadow-indigo-600/30">
-                    Close Breakdown
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- PASTE JSON TEXT MODAL -->
+    <!-- PASTE JSON MODAL -->
     <div id="paste-json-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full space-y-4 shadow-2xl animate-pop">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -452,16 +353,13 @@
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
-
             <p class="text-xs text-slate-400 leading-relaxed">
                 Copy the JSON code generated from your chat and paste it below to create a new deck directly:
             </p>
-
             <textarea id="paste-json-input" rows="8" placeholder='{"title": "Sample Topic", "course": "REE", "category": "EE", "questions": [...]}' class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-indigo-300 focus:outline-none focus:border-indigo-500 custom-scrollbar"></textarea>
-
-            <div class="flex items-center justify-end gap-2 pt-1">
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
                 <button onclick="togglePasteModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs">Cancel</button>
-                <button onclick="processPastedJson()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-indigo-600/20">
+                <button onclick="processPastedJson()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-md shadow-indigo-600/30">
                     <i class="fa-solid fa-file-import"></i>
                     <span>Import Deck</span>
                 </button>
@@ -469,14 +367,177 @@
         </div>
     </div>
 
-    <!-- SETTINGS / PREFERENCES MODAL -->
+    <!-- AI GENERATOR & SCANNER MODAL -->
+    <div id="ai-generator-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800/90 rounded-2xl p-5 sm:p-6 max-w-lg w-full shadow-2xl flex flex-col max-h-[90vh] animate-pop">
+            
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3.5 shrink-0">
+                <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                    <span>AI Study Deck Studio</span>
+                </h3>
+                <button onclick="toggleAiModal()" class="text-slate-400 hover:text-white p-1 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- DYNAMIC API KEY WARNING BANNER -->
+            <div id="ai-apikey-warning-banner" class="hidden my-3 p-3 bg-amber-950/50 border border-amber-500/40 rounded-xl text-amber-200 text-xs flex items-center justify-between gap-2 shrink-0">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
+                    <span><b>Local JSON Import Only.</b> To use AI generation, please input your Gemini API Key in <button onclick="toggleSettingsModal(); toggleAiModal();" class="underline font-bold text-amber-300">Settings</button>.</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 pt-3 border-b border-slate-800 pb-3">
+                <button id="ai-tab-prompt-btn" onclick="switchAiTab('prompt')" class="flex-1 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold transition-all shadow-md">
+                    <i class="fa-solid fa-pen-nib mr-1"></i> Generate Topic
+                </button>
+                <button id="ai-tab-photo-btn" onclick="switchAiTab('photo')" class="flex-1 py-2 bg-slate-800 text-slate-400 hover:text-white rounded-xl text-xs font-bold transition-all border border-slate-700/60">
+                    <i class="fa-solid fa-file-pdf mr-1 text-rose-400"></i> Scan Book / PDF File
+                </button>
+            </div>
+
+            <div class="overflow-y-auto custom-scrollbar space-y-4 text-xs sm:text-sm py-4 flex-1">
+                
+                <!-- PROMPT MODE FORM -->
+                <div id="ai-prompt-mode" class="space-y-3">
+                    <div>
+                        <label class="block text-slate-300 font-bold mb-1">Topic / Chapter Description</label>
+                        <textarea id="ai-topic-input" rows="3" placeholder="e.g., Ohm's Law, Transformer Efficiency, and Copper Losses..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-indigo-200 focus:outline-none focus:border-indigo-500 custom-scrollbar"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-300 font-bold mb-1">Target Course</label>
+                            <select id="ai-course-select" class="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-indigo-500">
+                                <option value="REE">REE (Electrical Engineering)</option>
+                                <option value="LET">LET (Teachers Exam)</option>
+                                <option value="BLEPP">BLEPP (Psychometrician)</option>
+                                <option value="GENERAL">General / Custom</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 font-bold mb-1">Subject Code</label>
+                            <input type="text" id="ai-cat-input" placeholder="e.g., EE, MATH" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-indigo-200 font-bold uppercase focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-300 font-bold mb-1">Number of Questions</label>
+                            <select id="ai-count-select" class="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-indigo-500">
+                                <option value="5">5 Board Items</option>
+                                <option value="10" selected>10 Board Items</option>
+                                <option value="15">15 Board Items</option>
+                                <option value="20">20 Board Items</option>
+                                <option value="25">25 Board Items</option>
+                                <option value="30">30 Board Items</option>
+                                <option value="50">50 Board Items (Full Drill)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 font-bold mb-1">Difficulty Level</label>
+                            <select id="ai-diff-select" class="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-indigo-500">
+                                <option value="Standard Board Level" selected>Standard Board Level</option>
+                                <option value="Challenging / Advanced">Challenging / Advanced</option>
+                                <option value="Fundamental / Basics">Fundamental / Basics</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-slate-950/80 rounded-xl border border-indigo-500/30">
+                        <div class="flex items-center gap-2.5">
+                            <div class="p-2 bg-cyan-500/20 text-cyan-300 rounded-lg border border-cyan-500/30">
+                                <i class="fa-solid fa-globe text-sm"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs font-bold text-slate-200">Search Web for Real Board Questions</div>
+                                <div class="text-[10px] text-slate-400 leading-tight">Searches live web for real board exam items, formulas & explanations</div>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input type="checkbox" id="ai-web-search-toggle" class="sr-only peer" checked>
+                            <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- PHOTO MODE FORM -->
+                <div id="ai-photo-mode" class="hidden space-y-3">
+                    <p class="text-slate-400 text-xs">
+                        Upload or snap a photo of your book page, reviewer sheet, or upload a <b>PDF document</b>. The AI will convert it into interactive board exam drills!
+                    </p>
+
+                    <div class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl p-5 text-center bg-slate-950/50 transition-colors cursor-pointer relative" onclick="document.getElementById('ai-image-file').click()" ondragover="event.preventDefault()" ondrop="handleAiFileDrop(event)">
+                        <div class="flex items-center justify-center gap-2 mb-2">
+                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-indigo-400"></i>
+                            <i class="fa-solid fa-file-pdf text-3xl text-rose-400"></i>
+                        </div>
+                        <div class="text-xs font-bold text-slate-200">Click or Drag Image / PDF Here</div>
+                        <div class="text-[10px] text-slate-500 mt-0.5">Supports JPG, PNG, WEBP textbook images & PDF documents</div>
+                        <input type="file" id="ai-image-file" accept="image/*,application/pdf,.pdf" onchange="previewAiImage(event)" class="hidden">
+                    </div>
+
+                    <div id="ai-image-preview-container" class="hidden relative rounded-xl overflow-hidden border border-slate-800">
+                        <img id="ai-image-preview" class="w-full object-cover max-h-48 hidden">
+                        <div id="ai-pdf-preview" class="hidden p-4 bg-slate-950 flex items-center gap-3">
+                            <i class="fa-solid fa-file-pdf text-3xl text-rose-500 shrink-0"></i>
+                            <div class="flex-1 overflow-hidden">
+                                <div id="ai-pdf-filename" class="font-bold text-slate-200 text-xs truncate">document.pdf</div>
+                                <div id="ai-pdf-filesize" class="text-[10px] text-slate-400">0 KB • PDF Document Ready</div>
+                            </div>
+                        </div>
+                        <button onclick="clearAiImage()" class="absolute top-2 right-2 bg-slate-950/80 text-rose-400 p-1.5 rounded-lg border border-rose-500/40 text-xs z-10" title="Remove File">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-300 font-bold mb-1">Course Folder</label>
+                            <select id="ai-photo-course-select" class="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-indigo-500">
+                                <option value="REE">REE (Electrical Engineering)</option>
+                                <option value="LET">LET (Teachers Exam)</option>
+                                <option value="BLEPP">BLEPP (Psychometrician)</option>
+                                <option value="GENERAL">General / Custom</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 font-bold mb-1">Subject Code</label>
+                            <input type="text" id="ai-photo-cat-input" placeholder="e.g., EE, GENED" class="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl p-2.5 text-xs text-indigo-200 font-bold uppercase focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ai-loading-status" class="hidden p-3 bg-indigo-950/60 rounded-xl border border-indigo-500/30 text-indigo-300 text-xs flex items-center gap-3">
+                    <i class="fa-solid fa-spinner fa-spin text-lg text-amber-300"></i>
+                    <div>
+                        <div class="font-bold text-white" id="ai-status-title">Generating Board Exam Deck...</div>
+                        <div class="text-[11px] text-slate-400" id="ai-status-subtitle">Gemini 3.1 is constructing structured items and memory anchors...</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="pt-3 border-t border-slate-800/90 shrink-0 flex items-center justify-end gap-2">
+                <button onclick="toggleAiModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs">Cancel</button>
+                <button id="ai-generate-submit-btn" onclick="executeAiGeneration()" class="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-indigo-600/30">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
+                    <span>Generate AI Deck</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
     <div id="settings-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800/90 rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl flex flex-col max-h-[88vh] animate-pop">
+        <div class="bg-slate-900 border border-slate-800/90 rounded-2xl p-5 sm:p-6 max-w-lg w-full shadow-2xl flex flex-col max-h-[88vh] animate-pop">
             
             <div class="flex items-center justify-between border-b border-slate-800/90 pb-3.5 shrink-0">
                 <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
                     <i class="fa-solid fa-sliders text-indigo-400"></i>
-                    <span>Exam Preferences</span>
+                    <span>Exam Preferences & AI Key</span>
                 </h3>
                 <button onclick="toggleSettingsModal()" class="text-slate-400 hover:text-white p-1 transition-colors">
                     <i class="fa-solid fa-xmark text-lg"></i>
@@ -484,7 +545,6 @@
             </div>
 
             <div class="overflow-y-auto custom-scrollbar space-y-4 text-sm pr-1 py-4 flex-1">
-                <!-- Target Passing Score -->
                 <div class="bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/50 space-y-2">
                     <div class="flex items-center justify-between">
                         <div class="font-bold text-slate-200">Passing Grade Target</div>
@@ -498,7 +558,6 @@
                     </div>
                 </div>
 
-                <!-- COLORBLIND ACCESSIBILITY MODE -->
                 <div class="bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/50 space-y-2">
                     <div class="font-bold text-slate-200 flex items-center gap-2">
                         <i class="fa-solid fa-eye text-indigo-400"></i>
@@ -507,12 +566,10 @@
                     <select id="colorblind-select" onchange="updateLiveTheme()" class="w-full bg-slate-900 text-slate-200 border border-slate-700 rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer">
                         <option value="none">Normal Vision (Default)</option>
                         <option value="deuteranopia">Protanopia / Deuteranopia (Blue / Yellow)</option>
-                        <option value="tritanopia">Tritanopia (Teal / Magenta)</option>
                         <option value="highcontrast">High Contrast (Monochrome)</option>
                     </select>
                 </div>
 
-                <!-- APP UI THEME SELECTOR -->
                 <div class="bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/50 space-y-2">
                     <div class="font-bold text-slate-200 flex items-center gap-2">
                         <i class="fa-solid fa-palette text-indigo-400"></i>
@@ -526,54 +583,44 @@
                     </select>
                 </div>
 
-                <!-- TEXT / FONT SIZE ACCESSIBILITY -->
-                <div class="bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/50 space-y-2">
-                    <div class="font-bold text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-text-height text-indigo-400"></i>
-                        <span>Text / Font Size</span>
-                    </div>
-                    <select id="fontsize-select" onchange="updateLiveTheme()" class="w-full bg-slate-900 text-slate-200 border border-slate-700 rounded-xl p-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer">
-                        <option value="small">Compact / Small</option>
-                        <option value="normal" selected>Normal (Default)</option>
-                        <option value="large">Large (Easy Read - Far Sighted)</option>
-                        <option value="xlarge">Extra Large (High Visibility)</option>
-                    </select>
-                </div>
-
-                <!-- Shuffle Questions Toggle -->
-                <div class="flex items-center justify-between bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/50">
-                    <div>
-                        <div class="font-bold text-slate-200">Shuffle Question Order</div>
-                        <div class="text-xs text-slate-400">Randomize question order every run</div>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="shuffle-q-toggle" class="sr-only peer" checked onchange="saveSettings()">
-                        <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                    </label>
-                </div>
-
-                <!-- Shuffle Choices Toggle -->
-                <div class="flex items-center justify-between bg-slate-800/50 p-3.5 rounded-xl border border-slate-700/50">
-                    <div>
-                        <div class="font-bold text-slate-200">Shuffle Answer Choices</div>
-                        <div class="text-xs text-slate-400">Mix up choices (A, B, C, D)</div>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="shuffle-c-toggle" class="sr-only peer" checked onchange="saveSettings()">
-                        <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                    </label>
-                </div>
-
-                <hr class="border-slate-800 my-4">
-                <div class="space-y-3">
+                <!-- CUSTOM GEMINI API KEY & STEP-BY-STEP GUIDE -->
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-indigo-500/30 space-y-3">
                     <div class="flex items-center justify-between">
-                        <h4 class="font-bold text-white flex items-center gap-2 text-sm">
-                            <i class="fa-solid fa-chart-line text-indigo-400"></i> Performance Breakdown by Subject
-                        </h4>
-                        <span class="text-[10px] text-slate-400 font-medium">Focus Area Analysis</span>
+                        <div class="font-bold text-slate-200 flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-key text-amber-400"></i>
+                            <span>Custom Gemini API Key</span>
+                        </div>
+                        <span class="text-[10px] text-indigo-300 bg-indigo-500/20 px-2 py-0.5 rounded font-bold">Optional / Unlimited</span>
                     </div>
-                    <div id="settings-history-stats" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-center text-xs"></div>
-                    <div id="settings-history-list" class="space-y-3 pt-1"></div>
+                    <input type="password" id="gemini-apikey-input" placeholder="AIzaSy..." onchange="saveSettings()" class="w-full bg-slate-900 text-indigo-200 border border-slate-700 rounded-xl p-2.5 text-xs font-mono focus:outline-none focus:border-indigo-500">
+                    
+                    <div class="bg-slate-950/80 p-3 rounded-lg border border-slate-800 text-xs space-y-2 text-slate-300">
+                        <div class="font-extrabold text-indigo-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-question"></i>
+                            <span>How to get a FREE Gemini API Key in 30 Seconds:</span>
+                        </div>
+                        <ol class="list-decimal list-inside space-y-1 text-[11px] text-slate-400 leading-relaxed">
+                            <li>Go to <a href="https://aistudio.google.com/" target="_blank" class="text-indigo-400 underline font-bold">Google AI Studio</a> and log in with any Google account.</li>
+                            <li>Click the top-left button that says <b>"Get API key"</b>.</li>
+                            <li>Click <b>"Create API key in new project"</b>, then copy your generated key.</li>
+                            <li>Paste it in the box above! ✨</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- CREATOR SUPPORT BANNER -->
+                <div class="bg-gradient-to-r from-rose-950/40 via-purple-950/40 to-slate-900 p-4 rounded-xl border border-rose-500/30 text-center space-y-2">
+                    <div class="text-xs font-extrabold text-rose-300 flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-heart text-rose-400 animate-pulse"></i>
+                        <span>Support the Creator</span>
+                    </div>
+                    <p class="text-[11px] text-slate-300 leading-relaxed">
+                        Enjoying this universal board exam simulator? Consider supporting future updates, bug fixes, and feature expansions by buying me a coffee or supporting on Patreon! ☕
+                    </p>
+                    <a href="https://www.patreon.com/cw/Kuro1008" target="_blank" class="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg text-xs transition-all shadow-md shadow-rose-600/30">
+                        <i class="fa-brands fa-patreon"></i>
+                        <span>Support on Patreon ($5+)</span>
+                    </a>
                 </div>
             </div>
 
@@ -585,7 +632,6 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="py-5 border-t border-slate-900/90 text-center text-xs text-slate-500 space-y-2">
         <div>Master Board Exam Simulator • Universal Multi-Course Drill Engine</div>
         <div>
@@ -596,8 +642,46 @@
         </div>
     </footer>
 
+    <!-- JAVASCRIPT LOGIC -->
     <script>
-        // GLOBAL CONSTANTS & PRESETS
+        const defaultReeDeck = {
+            id: "ree_ohms_law_01",
+            title: "Resistance - Ohms Law",
+            desc: "Review questions on atomic structure, resistance, temperature coefficients, and Ohm's Law for the board exam.",
+            course: "REE",
+            category: "EE",
+            questions: [
+                {
+                    q: "The maximum number of electrons that can be accommodated in the outermost valence orbit of an atom is ____.",
+                    options: ["2", "8", "18", "32"],
+                    correct: 1,
+                    keyword: "Octet Rule = 8 Max Valence",
+                    because: "According to the Octet Rule, an atom's outermost valence shell can hold a maximum of 8 electrons for stability."
+                },
+                {
+                    q: "If the number of valence electrons of an atom is less than 4, the substance is usually classified as ____.",
+                    options: ["a conductor", "an insulator", "a semiconductor", "a dielectric"],
+                    correct: 0,
+                    keyword: "< 4 Valence = Conductor",
+                    because: "Elements with 1 to 3 valence electrons easily shed outer electrons to form free conduction electrons."
+                },
+                {
+                    q: "Specific resistance (resistivity) of a material depends primarily upon ____.",
+                    options: ["length of the conductor", "cross-sectional area", "nature of material and temperature", "applied voltage"],
+                    correct: 2,
+                    keyword: "Resistivity = Intrinsic Material Property",
+                    because: "Resistivity is an intrinsic property determined by atomic structure and temperature, not by physical dimensions."
+                },
+                {
+                    q: "For Ohm's Law (V = IR) to strictly hold true in a metallic conductor, what condition must remain constant?",
+                    options: ["Voltage", "Current", "Temperature", "Resistance"],
+                    correct: 2,
+                    keyword: "Ohm's Law = Constant Temperature",
+                    because: "Resistance remains constant only when temperature and other physical conditions stay strictly fixed."
+                }
+            ]
+        };
+
         const coursePresets = {
             "REE": {
                 id: "REE",
@@ -634,9 +718,7 @@
                 badgeBg: "bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40",
                 subjects: {
                     "ABPSYCH": { label: "Abnormal Psych", color: "bg-purple-500/20 text-purple-300 border-purple-500/30", icon: "fa-head-side-virus" },
-                    "PSYCHASSESS": { label: "Psych Assessment", color: "bg-violet-500/20 text-violet-300 border-violet-500/30", icon: "fa-clipboard-check" },
-                    "TOP": { label: "Theories of Personality", color: "bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/30", icon: "fa-masks-theater" },
-                    "INDPSYCH": { label: "Industrial Psych", color: "bg-teal-500/20 text-teal-300 border-teal-500/30", icon: "fa-building-user" }
+                    "PSYCHASSESS": { label: "Psych Assessment", color: "bg-violet-500/20 text-violet-300 border-violet-500/30", icon: "fa-clipboard-check" }
                 }
             },
             "GENERAL": {
@@ -650,30 +732,6 @@
             }
         };
 
-        const motivationalBank = {
-            mastery: [
-                "Phenomenal performance! You have mastered these concepts at a board-exam level.",
-                "Outstanding precision! Keep this momentum up and the board exam will be a breeze.",
-                "Top-tier result! Your consistency and accuracy are incredible."
-            ],
-            pass: [
-                "Great job! You passed the target cutoff for this drill.",
-                "Solid effort! You cleared the passing mark. Keep refining your weak spots.",
-                "Congratulations! You're on track to crush the board exam!"
-            ],
-            nearPass: [
-                "Very close! A quick review of the missed items will push you over the passing mark.",
-                "Almost there! Review your key memory anchors and retake this drill.",
-                "Good attempt! Focus on the missed concepts and try again."
-            ],
-            needsReview: [
-                "Don't get discouraged! Re-reading the explanations below will help lock in the concepts.",
-                "Mistakes are stepping stones to mastery. Review the missed items and drill again!",
-                "Keep pushing! Every practice attempt builds long-term memory."
-            ]
-        };
-
-        // GLOBAL APP STATE
         let userDecks = [];
         let examHistory = [];
         let settings = {
@@ -682,6 +740,7 @@
             colorblindMode: 'none',
             theme: 'slate',
             fontSize: 'normal',
+            geminiApiKey: '',
             shuffleQuestions: true,
             shuffleChoices: true
         };
@@ -696,7 +755,7 @@
         let maxStreak = 0;
         let answered = false;
         let missedQuestions = [];
-        let cardFlipped = false;
+        let activeSavedFormatToContinue = null;
 
         function showToast(message, isError = false) {
             const container = document.getElementById('toast-container');
@@ -728,26 +787,19 @@
             el.classList.add('animate-pop');
         }
 
-        function inferCourseKey(courseRaw, catRaw) {
+        function inferCourseKey(courseRaw, catRaw, titleRaw) {
             const c = (courseRaw || "").trim().toUpperCase();
             const cat = (catRaw || "").trim().toUpperCase();
-
+            const t = (titleRaw || "").trim().toUpperCase();
             if (c === "REE" || c === "LET" || c === "BLEPP") return c;
-
-            if (["EE", "MATH", "ESAS"].includes(cat) || cat.includes("EE") || cat.includes("ELEC") || cat.includes("MATH") || cat.includes("ESAS")) return "REE";
-            if (["GENED", "PROFED", "MAJOR"].includes(cat) || cat.includes("GEN") || cat.includes("PROF") || cat.includes("TEACH")) return "LET";
+            if (["EE", "MATH", "ESAS"].includes(cat) || cat.includes("EE") || cat.includes("MATH")) return "REE";
+            if (["GENED", "PROFED", "MAJOR"].includes(cat) || cat.includes("GEN")) return "LET";
             if (["ABPSYCH", "PSYCHASSESS", "TOP", "INDPSYCH"].includes(cat) || cat.includes("PSYCH")) return "BLEPP";
-
-            if (c.includes("EE") || c.includes("ELEC") || c.includes("REE") || c.includes("ENGINEER")) return "REE";
-            if (c.includes("LET") || c.includes("TEACH") || c.includes("EDUC")) return "LET";
-            if (c.includes("BLEPP") || c.includes("PSYCH")) return "BLEPP";
-
             return "GENERAL";
         }
 
         function getCourseMeta(courseKey) {
             if (coursePresets[courseKey]) return coursePresets[courseKey];
-
             return {
                 id: courseKey,
                 title: `${courseKey} Exam Course`,
@@ -761,315 +813,16 @@
 
         function getCategoryMeta(courseKey, cat) {
             const courseMeta = getCourseMeta(courseKey);
-            const key = (cat || "GENERAL").toUpperCase().replace(/[^A-Z]/g, '');
-
+            let key = (cat || "EE").toUpperCase().replace(/[^A-Z]/g, '');
+            if (key === "GENERAL" && courseKey === "REE") key = "EE";
             if (courseMeta.subjects && courseMeta.subjects[key]) {
                 return courseMeta.subjects[key];
             }
-
             return {
                 label: cat ? cat.toUpperCase() : "GENERAL",
                 color: "bg-slate-800/60 text-slate-300 border-slate-700",
                 icon: "fa-folder-open"
             };
-        }
-
-        function isGenericOption(optStr) {
-            if (!optStr || typeof optStr !== 'string') return true;
-            const s = optStr.toLowerCase().trim();
-            return s.includes('all of the above') || s.includes('none of these') || s.includes('none of the above') || s.includes('both a and b');
-        }
-
-        function populateSettingsHistory() {
-            const statsContainer = document.getElementById('settings-history-stats');
-            const listContainer = document.getElementById('settings-history-list');
-            if (!statsContainer || !listContainer) return;
-
-            if (examHistory.length === 0) {
-                statsContainer.innerHTML = '<div class="col-span-full text-slate-500 text-xs py-2 text-center">No exams taken yet. Complete a drill to see your performance stats!</div>';
-                listContainer.innerHTML = '';
-                return;
-            }
-
-            const totalTaken = examHistory.length;
-            const avgAcc = Math.round(examHistory.reduce((acc, curr) => acc + curr.accuracy, 0) / totalTaken);
-
-            const subjectStats = {};
-
-            examHistory.forEach(h => {
-                const matchingDeck = userDecks.find(d => d.id === h.id);
-                const rawCourse = matchingDeck ? matchingDeck.course : h.course;
-                const rawCat = matchingDeck ? matchingDeck.category : h.category;
-
-                const cKey = inferCourseKey(rawCourse, rawCat);
-                const catKey = (rawCat || "GENERAL").toUpperCase();
-                const groupKey = `${cKey}_${catKey}`;
-
-                if (!subjectStats[groupKey]) {
-                    subjectStats[groupKey] = {
-                        courseKey: cKey,
-                        catKey: catKey,
-                        items: []
-                    };
-                }
-                subjectStats[groupKey].items.push(h);
-            });
-
-            let lowestSubject = null;
-            let lowestAvg = 101;
-
-            Object.values(subjectStats).forEach(group => {
-                const grpAvg = Math.round(group.items.reduce((a, b) => a + b.accuracy, 0) / group.items.length);
-                group.avg = grpAvg;
-                if (grpAvg < lowestAvg) {
-                    lowestAvg = grpAvg;
-                    const cMeta = getCourseMeta(group.courseKey);
-                    const catMeta = getCategoryMeta(group.courseKey, group.catKey);
-                    lowestSubject = `${cMeta.id} (${catMeta.label})`;
-                }
-            });
-
-            statsContainer.innerHTML = `
-                <div class="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
-                    <div class="text-slate-400 mb-0.5 text-[10px]">Total Drills</div>
-                    <div class="font-extrabold text-slate-200 text-sm">${totalTaken}</div>
-                </div>
-                <div class="bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
-                    <div class="text-slate-400 mb-0.5 text-[10px]">Overall Avg</div>
-                    <div class="font-extrabold text-indigo-400 text-sm">${avgAcc}%</div>
-                </div>
-                <div class="col-span-2 sm:col-span-1 bg-slate-800/50 p-2.5 rounded-xl border ${lowestAvg < 75 ? 'border-amber-500/40 bg-amber-500/5' : 'border-slate-700/50'}">
-                    <div class="text-slate-400 mb-0.5 text-[10px]">Focus Area ⚠️</div>
-                    <div class="font-bold ${lowestAvg < 75 ? 'text-amber-400' : 'text-emerald-400'} text-xs truncate" title="${lowestSubject || 'None'}">${lowestSubject || 'None'} (${lowestAvg}%)</div>
-                </div>
-            `;
-
-            const courseGrouped = {};
-            Object.values(subjectStats).forEach(group => {
-                if (!courseGrouped[group.courseKey]) {
-                    courseGrouped[group.courseKey] = [];
-                }
-                courseGrouped[group.courseKey].push(group);
-            });
-
-            let html = '';
-            Object.keys(courseGrouped).forEach(cKey => {
-                const cMeta = getCourseMeta(cKey);
-                const subjects = courseGrouped[cKey];
-
-                html += `
-                    <div class="bg-slate-950/80 border border-slate-800/90 rounded-xl p-3 space-y-3">
-                        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                            <span class="font-bold text-xs text-white flex items-center gap-1.5">
-                                <i class="fa-solid ${cMeta.icon} text-indigo-400"></i>
-                                <span>${cMeta.title}</span>
-                            </span>
-                            <span class="text-[10px] text-slate-400 font-medium">${subjects.reduce((sum, s) => sum + s.items.length, 0)} Attempts</span>
-                        </div>
-                        <div class="space-y-2.5">
-                `;
-
-                subjects.forEach(sub => {
-                    const catMeta = getCategoryMeta(cKey, sub.catKey);
-                    const isWeak = sub.avg < 75;
-
-                    html += `
-                        <div class="bg-slate-900/90 rounded-lg p-2.5 border border-slate-800/80 space-y-2">
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="px-2 py-0.5 rounded-md text-[11px] font-bold border ${catMeta.color} flex items-center gap-1">
-                                    <i class="fa-solid ${catMeta.icon}"></i>
-                                    <span>${catMeta.label}</span>
-                                </span>
-                                <div class="flex items-center gap-2">
-                                    ${isWeak ? '<span class="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">Needs Focus</span>' : ''}
-                                    <span class="font-black text-xs ${sub.avg >= 80 ? 'text-emerald-400' : sub.avg >= 70 ? 'text-amber-400' : 'text-rose-400'}">${sub.avg}% Avg</span>
-                                </div>
-                            </div>
-
-                            <div class="space-y-1.5 pt-1 pl-1 border-t border-slate-800/50">
-                    `;
-
-                    sub.items.slice().reverse().forEach(item => {
-                        const dateStr = item.date ? new Date(item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
-                        html += `
-                            <div class="flex items-center justify-between text-[11px] text-slate-300 py-1 px-2 bg-slate-950/60 rounded border border-slate-800/40 hover:border-slate-700 transition-colors">
-                                <div class="truncate max-w-[170px] sm:max-w-[210px] font-medium" title="${item.title}">${item.title}</div>
-                                <div class="flex items-center gap-2 shrink-0 font-bold">
-                                    <span class="text-[10px] text-slate-500 font-normal">${dateStr}</span>
-                                    <span class="${item.passed ? 'text-emerald-400' : 'text-rose-400'}">${item.accuracy}%</span>
-                                    <span class="text-[10px] text-slate-400 font-normal">(${item.score} pts)</span>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    html += `
-                            </div>
-                        </div>
-                    `;
-                });
-
-                html += `
-                        </div>
-                    </div>
-                `;
-            });
-
-            listContainer.innerHTML = html;
-        }
-
-        function toggleHistoryDetailsModal() {
-            const modal = document.getElementById('history-details-modal');
-            if (!modal) return;
-
-            if (modal.classList.contains('hidden')) {
-                populateDeckHistoryDetails();
-                modal.classList.remove('hidden');
-            } else {
-                modal.classList.add('hidden');
-            }
-        }
-
-        function populateDeckHistoryDetails() {
-            const container = document.getElementById('history-details-content');
-            if (!container || !activeDeck) return;
-
-            const deckHist = examHistory.filter(h => h.id === activeDeck.id);
-            if (deckHist.length === 0) {
-                container.innerHTML = `<div class="text-center py-6 text-slate-400">No attempt records found for this deck yet.</div>`;
-                return;
-            }
-
-            const totalAttempts = deckHist.length;
-            const bestAcc = Math.max(...deckHist.map(h => h.accuracy));
-            const avgAcc = Math.round(deckHist.reduce((sum, h) => sum + h.accuracy, 0) / totalAttempts);
-            const passedCount = deckHist.filter(h => h.passed).length;
-
-            let html = `
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
-                    <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
-                        <div class="text-slate-400 text-[10px]">Total Runs</div>
-                        <div class="font-extrabold text-slate-100 text-sm">${totalAttempts}</div>
-                    </div>
-                    <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
-                        <div class="text-slate-400 text-[10px]">Best Grade</div>
-                        <div class="font-extrabold text-emerald-400 text-sm">${bestAcc}%</div>
-                    </div>
-                    <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
-                        <div class="text-slate-400 text-[10px]">Average Grade</div>
-                        <div class="font-extrabold text-indigo-400 text-sm">${avgAcc}%</div>
-                    </div>
-                    <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
-                        <div class="text-slate-400 text-[10px]">Passed</div>
-                        <div class="font-extrabold text-amber-300 text-sm">${passedCount}/${totalAttempts}</div>
-                    </div>
-                </div>
-
-                <div class="space-y-2 pt-2">
-                    <h4 class="font-bold text-slate-300 text-xs uppercase tracking-wider">Attempt History Log</h4>
-                    <div class="space-y-2">
-            `;
-
-            deckHist.slice().reverse().forEach((run, index) => {
-                const dateStr = run.date ? new Date(run.date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'Previous Session';
-                const correct = Math.round((run.accuracy / 100) * run.totalQ);
-                const wrongs = run.totalQ - correct;
-
-                html += `
-                    <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800/90 space-y-2">
-                        <div class="flex items-center justify-between text-xs">
-                            <span class="font-bold text-slate-200">Attempt #${totalAttempts - index}</span>
-                            <span class="text-slate-500 text-[11px]">${dateStr}</span>
-                        </div>
-                        <div class="grid grid-cols-4 gap-2 text-center text-[11px]">
-                            <div class="bg-slate-900 p-1.5 rounded-lg border border-slate-800">
-                                <div class="text-slate-500 text-[10px]">Accuracy</div>
-                                <div class="font-black ${run.passed ? 'text-emerald-400' : 'text-rose-400'}">${run.accuracy}%</div>
-                            </div>
-                            <div class="bg-slate-900 p-1.5 rounded-lg border border-slate-800">
-                                <div class="text-slate-500 text-[10px]">Correct</div>
-                                <div class="font-bold text-emerald-400">${correct}</div>
-                            </div>
-                            <div class="bg-slate-900 p-1.5 rounded-lg border border-slate-800">
-                                <div class="text-slate-500 text-[10px]">Wrong</div>
-                                <div class="font-bold text-rose-400">${wrongs}</div>
-                            </div>
-                            <div class="bg-slate-900 p-1.5 rounded-lg border border-slate-800">
-                                <div class="text-slate-500 text-[10px]">Score</div>
-                                <div class="font-bold text-amber-300">${run.score}</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            html += `
-                    </div>
-                </div>
-            `;
-
-            container.innerHTML = html;
-        }
-
-        function togglePasteModal() {
-            const modal = document.getElementById('paste-json-modal');
-            if (modal) modal.classList.toggle('hidden');
-        }
-
-        function toggleSettingsModal() {
-            const modal = document.getElementById('settings-modal');
-            if (modal) {
-                modal.classList.toggle('hidden');
-                if (!modal.classList.contains('hidden')) {
-                    populateSettingsHistory();
-                }
-            }
-        }
-
-        function loadHistory() {
-            try {
-                const hist = localStorage.getItem('ee_simulator_history');
-                if (hist) examHistory = JSON.parse(hist);
-            } catch(e) {}
-        }
-
-        function updateDrillFormat(val) {
-            settings.drillFormat = val || 'mc';
-            saveSettings();
-        }
-
-        function updateSessionPassTarget(val) {
-            settings.passTarget = parseInt(val, 10) || 80;
-            const passDisplay = document.getElementById('pass-target-display');
-            if (passDisplay) passDisplay.textContent = `${settings.passTarget}%`;
-            saveSettings();
-        }
-
-        function updateShuffleFromStartCard(type, checked) {
-            if (type === 'q') settings.shuffleQuestions = checked;
-            if (type === 'c') settings.shuffleChoices = checked;
-            saveSettings();
-        }
-
-        function saveSettings() {
-            const passSlider = document.getElementById('pass-target-slider');
-            const colorblindSelect = document.getElementById('colorblind-select');
-            const themeSelect = document.getElementById('theme-select');
-            const fontsizeSelect = document.getElementById('fontsize-select');
-            const shuffleQ = document.getElementById('shuffle-q-toggle');
-            const shuffleC = document.getElementById('shuffle-c-toggle');
-            const formatSelect = document.getElementById('drill-format-dropdown');
-
-            if (passSlider) settings.passTarget = parseInt(passSlider.value, 10);
-            if (formatSelect) settings.drillFormat = formatSelect.value;
-            if (colorblindSelect) settings.colorblindMode = colorblindSelect.value;
-            if (themeSelect) settings.theme = themeSelect.value;
-            if (fontsizeSelect) settings.fontSize = fontsizeSelect.value;
-            if (shuffleQ) settings.shuffleQuestions = shuffleQ.checked;
-            if (shuffleC) settings.shuffleChoices = shuffleC.checked;
-
-            localStorage.setItem('ee_simulator_settings', JSON.stringify(settings));
-            updateLiveTheme();
         }
 
         function loadSettings() {
@@ -1086,11 +839,7 @@
             const formatDropdown = document.getElementById('drill-format-dropdown');
             const colorblindSelect = document.getElementById('colorblind-select');
             const themeSelect = document.getElementById('theme-select');
-            const fontsizeSelect = document.getElementById('fontsize-select');
-            const shuffleQ = document.getElementById('shuffle-q-toggle');
-            const shuffleC = document.getElementById('shuffle-c-toggle');
-            const startShuffleQ = document.getElementById('start-shuffle-q-toggle');
-            const startShuffleC = document.getElementById('start-shuffle-c-toggle');
+            const apiKeyInput = document.getElementById('gemini-apikey-input');
 
             if (passSlider) passSlider.value = settings.passTarget;
             if (passDisplay) passDisplay.textContent = `${settings.passTarget}%`;
@@ -1098,72 +847,99 @@
             if (formatDropdown) formatDropdown.value = settings.drillFormat || 'mc';
             if (colorblindSelect) colorblindSelect.value = settings.colorblindMode;
             if (themeSelect) themeSelect.value = settings.theme;
-            if (fontsizeSelect) fontsizeSelect.value = settings.fontSize;
-            if (shuffleQ) shuffleQ.checked = settings.shuffleQuestions;
-            if (shuffleC) shuffleC.checked = settings.shuffleChoices;
-            if (startShuffleQ) startShuffleQ.checked = settings.shuffleQuestions;
-            if (startShuffleC) startShuffleC.checked = settings.shuffleChoices;
+            if (apiKeyInput) apiKeyInput.value = settings.geminiApiKey || '';
 
             updateLiveTheme();
+            checkApiKeyNotice();
+        }
+
+        function saveSettings() {
+            const passSlider = document.getElementById('pass-target-slider');
+            const colorblindSelect = document.getElementById('colorblind-select');
+            const themeSelect = document.getElementById('theme-select');
+            const apiKeyInput = document.getElementById('gemini-apikey-input');
+            const shuffleQ = document.getElementById('start-shuffle-q-toggle');
+            const shuffleC = document.getElementById('start-shuffle-c-toggle');
+            const formatSelect = document.getElementById('drill-format-dropdown');
+
+            if (passSlider) settings.passTarget = parseInt(passSlider.value, 10);
+            if (formatSelect) settings.drillFormat = formatSelect.value;
+            if (colorblindSelect) settings.colorblindMode = colorblindSelect.value;
+            if (themeSelect) settings.theme = themeSelect.value;
+            if (apiKeyInput) settings.geminiApiKey = apiKeyInput.value.trim();
+            if (shuffleQ) settings.shuffleQuestions = shuffleQ.checked;
+            if (shuffleC) settings.shuffleChoices = shuffleC.checked;
+
+            localStorage.setItem('ee_simulator_settings', JSON.stringify(settings));
+            updateLiveTheme();
+            checkApiKeyNotice();
+        }
+
+        function checkApiKeyNotice() {
+            const warningBanner = document.getElementById('ai-apikey-warning-banner');
+            if (!warningBanner) return;
+            if (!settings.geminiApiKey || settings.geminiApiKey.length < 5) {
+                warningBanner.classList.remove('hidden');
+            } else {
+                warningBanner.classList.add('hidden');
+            }
         }
 
         function updateLiveTheme() {
             const colorblindSelect = document.getElementById('colorblind-select');
             const themeSelect = document.getElementById('theme-select');
-            const fontsizeSelect = document.getElementById('fontsize-select');
-
             const cb = colorblindSelect ? colorblindSelect.value : settings.colorblindMode;
             const th = themeSelect ? themeSelect.value : settings.theme;
-            const fs = fontsizeSelect ? fontsizeSelect.value : settings.fontSize;
 
             settings.colorblindMode = cb;
             settings.theme = th;
-            settings.fontSize = fs;
 
-            document.body.classList.remove(
-                'cb-deuteranopia', 'cb-tritanopia', 'cb-highcontrast',
-                'theme-cyber', 'theme-matrix', 'theme-oled',
-                'fs-small', 'fs-large', 'fs-xlarge'
-            );
-
+            document.body.classList.remove('cb-deuteranopia', 'cb-highcontrast', 'theme-cyber', 'theme-matrix', 'theme-oled');
             if (cb !== 'none') document.body.classList.add(`cb-${cb}`);
             if (th !== 'slate') document.body.classList.add(`theme-${th}`);
-            if (fs !== 'normal') document.body.classList.add(`fs-${fs}`);
+        }
+
+        function loadDecksFromStorage() {
+            try {
+                const stored = localStorage.getItem('ee_simulator_user_decks');
+                if (stored) {
+                    userDecks = JSON.parse(stored);
+                }
+            } catch(e) {
+                userDecks = [];
+            }
+
+            if (!userDecks || !Array.isArray(userDecks) || userDecks.length === 0) {
+                userDecks = [defaultReeDeck];
+                localStorage.setItem('ee_simulator_user_decks', JSON.stringify(userDecks));
+            }
+
+            userDecks.forEach(d => {
+                let inferred = inferCourseKey(d.course, d.category, d.title);
+                d.course = inferred;
+                let cat = (d.category || "EE").toUpperCase();
+                if (cat === "GENERAL" && inferred === "REE") cat = "EE";
+                d.category = cat;
+            });
         }
 
         function parseJsonSafely(rawString) {
             if (!rawString || typeof rawString !== 'string') return null;
             let cleaned = rawString.trim();
-
-            if (cleaned.charCodeAt(0) === 0xFEFF) {
-                cleaned = cleaned.slice(1);
-            }
-
+            if (cleaned.charCodeAt(0) === 0xFEFF) cleaned = cleaned.slice(1);
             if (cleaned.startsWith('```')) {
                 cleaned = cleaned.replace(/^```[a-zA-Z]*\n?/, '').replace(/```$/, '').trim();
             }
-
-            cleaned = cleaned.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
-
             try {
                 return JSON.parse(cleaned);
             } catch (err1) {
                 try {
-                    let sanitized = cleaned
-                        .replace(/,\s*([\]}])/g, '$1')
-                        .replace(/\\([^"\\\/bfnrtu])/g, '\\\\$1');
-
+                    let sanitized = cleaned.replace(/,\s*([\]}])/g, '$1');
                     return JSON.parse(sanitized);
                 } catch (err2) {
-                    try {
-                        const relaxed = new Function('return ' + cleaned)();
-                        if (relaxed && typeof relaxed === 'object') return relaxed;
-                    } catch (err3) {
-                        return null;
-                    }
+                    return null;
                 }
             }
-            return null;
         }
 
         function validateAndSanitizeDeck(deckObj) {
@@ -1171,10 +947,12 @@
             if (!deckObj.title || !deckObj.questions || !Array.isArray(deckObj.questions) || deckObj.questions.length === 0) {
                 return null;
             }
-
             deckObj.id = deckObj.id || ("custom_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7));
-            deckObj.course = inferCourseKey(deckObj.course, deckObj.category);
-            deckObj.category = (deckObj.category || "GENERAL").toUpperCase();
+            let inferred = inferCourseKey(deckObj.course, deckObj.category, deckObj.title);
+            deckObj.course = inferred;
+            let cat = (deckObj.category || "EE").toUpperCase();
+            if (cat === "GENERAL" && inferred === "REE") cat = "EE";
+            deckObj.category = cat;
 
             deckObj.questions = deckObj.questions.map((q, i) => ({
                 q: q.q || q.question || `Question ${i + 1}`,
@@ -1183,13 +961,11 @@
                 keyword: q.keyword || "",
                 because: q.because || q.explanation || "No explanation provided."
             }));
-
             return deckObj;
         }
 
         function saveImportedDeckObj(importedObj) {
             let decksToImport = [];
-
             if (Array.isArray(importedObj)) {
                 importedObj.forEach(d => {
                     const sanitized = validateAndSanitizeDeck(d);
@@ -1201,23 +977,19 @@
             }
 
             if (decksToImport.length === 0) {
-                showToast("Invalid JSON: Deck must contain 'title' and a non-empty 'questions' array.", true);
+                showToast("Invalid JSON structure.", true);
                 return false;
             }
 
             let addedCount = 0;
             decksToImport.forEach(newDeck => {
                 const existingIdx = userDecks.findIndex(d => d.id === newDeck.id);
-                if (existingIdx >= 0) {
-                    userDecks[existingIdx] = newDeck;
-                } else {
-                    userDecks.push(newDeck);
-                }
+                if (existingIdx >= 0) userDecks[existingIdx] = newDeck;
+                else userDecks.push(newDeck);
                 addedCount++;
             });
 
             localStorage.setItem('ee_simulator_user_decks', JSON.stringify(userDecks));
-
             const lastDeck = decksToImport[decksToImport.length - 1];
             activeCourseFolder = lastDeck.course;
             activeCategoryFilter = lastDeck.category;
@@ -1230,20 +1002,12 @@
             const input = event.target;
             const file = input.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = (e) => {
                 const text = e.target.result;
                 const parsed = parseJsonSafely(text);
-                if (parsed) {
-                    saveImportedDeckObj(parsed);
-                } else {
-                    showToast("Failed to parse JSON file. Check for missing brackets/quotes.", true);
-                }
-                input.value = '';
-            };
-            reader.onerror = () => {
-                showToast("Error reading file.", true);
+                if (parsed) saveImportedDeckObj(parsed);
+                else showToast("Failed to parse JSON file.", true);
                 input.value = '';
             };
             reader.readAsText(file);
@@ -1255,7 +1019,6 @@
                 showToast("Please paste JSON text into the box.", true);
                 return;
             }
-
             const parsed = parseJsonSafely(rawText);
             if (parsed) {
                 if (saveImportedDeckObj(parsed)) {
@@ -1263,26 +1026,8 @@
                     togglePasteModal();
                 }
             } else {
-                showToast("Invalid JSON structure. Ensure your JSON format matches requirements.", true);
+                showToast("Invalid JSON structure.", true);
             }
-        }
-
-        function loadDecksFromStorage() {
-            try {
-                const stored = localStorage.getItem('ee_simulator_user_decks');
-                if (stored) {
-                    userDecks = JSON.parse(stored);
-                } else {
-                    userDecks = [];
-                }
-            } catch(e) {
-                userDecks = [];
-            }
-
-            userDecks.forEach(d => {
-                d.course = inferCourseKey(d.course, d.category);
-                d.category = (d.category || "GENERAL").toUpperCase();
-            });
         }
 
         function showDeckHub() {
@@ -1300,7 +1045,6 @@
             } else {
                 document.getElementById('deck-subtitle').textContent = "Multi-Course & Multi-Subject Drill Engine";
             }
-
             renderDeckHub();
             triggerPopAnimation('deck-hub-screen');
         }
@@ -1332,13 +1076,11 @@
             const container = document.getElementById('decks-container');
             const tabsContainer = document.getElementById('dynamic-filter-tabs');
             const breadcrumb = document.getElementById('hub-breadcrumb');
-
             if (!container || !tabsContainer || !breadcrumb) return;
 
             container.innerHTML = '';
             tabsContainer.innerHTML = '';
 
-            // LEVEL 1: ROOT VIEW
             if (!activeCourseFolder) {
                 tabsContainer.classList.add('hidden');
                 breadcrumb.innerHTML = `
@@ -1346,26 +1088,21 @@
                         <i class="fa-solid fa-folder text-base"></i>
                         <span>Root / Course Folders</span>
                     </div>
-                    <span class="text-slate-500 font-normal">Select a course to view subjects</span>
+                    <span class="text-slate-500 font-normal text-xs">Select a course to view subjects</span>
                 `;
 
                 const courseCounts = {};
                 userDecks.forEach(d => {
-                    const cKey = inferCourseKey(d.course, d.category);
+                    const cKey = inferCourseKey(d.course, d.category, d.title);
                     courseCounts[cKey] = (courseCounts[cKey] || 0) + 1;
                 });
 
-                const defaultCourseKeys = ["REE", "LET", "BLEPP", "GENERAL"];
-                const availableCourses = new Set([...defaultCourseKeys, ...Object.keys(courseCounts)]);
-
-                availableCourses.forEach(cKey => {
+                ["REE", "LET", "BLEPP", "GENERAL"].forEach(cKey => {
                     const count = courseCounts[cKey] || 0;
                     const cMeta = getCourseMeta(cKey);
-
                     const folderCard = document.createElement('div');
                     folderCard.onclick = () => openCourseFolder(cKey);
                     folderCard.className = `bg-gradient-to-br ${cMeta.gradient} border p-6 rounded-2xl transition-all hover:scale-[1.01] cursor-pointer group flex flex-col justify-between space-y-5 shadow-xl relative overflow-hidden animate-pop`;
-
                     folderCard.innerHTML = `
                         <div class="flex items-start justify-between">
                             <div class="p-3.5 bg-slate-800/80 rounded-xl border border-slate-700/60 text-2xl group-hover:scale-105 transition-transform text-white">
@@ -1375,12 +1112,10 @@
                                 ${count} ${count === 1 ? 'Deck' : 'Decks'}
                             </span>
                         </div>
-
                         <div>
                             <h3 class="font-extrabold text-xl text-white group-hover:text-indigo-300 transition-colors">${cMeta.title}</h3>
                             <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">${cMeta.desc}</p>
                         </div>
-
                         <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold text-indigo-400 group-hover:text-indigo-300">
                             <span>Open Course Folder</span>
                             <i class="fa-solid fa-arrow-right group-hover:translate-x-1.5 transition-transform"></i>
@@ -1388,35 +1123,30 @@
                     `;
                     container.appendChild(folderCard);
                 });
-
                 return;
             }
 
-            // LEVEL 2: INSIDE SPECIFIC COURSE FOLDER
             tabsContainer.classList.remove('hidden');
             tabsContainer.classList.add('flex');
-
             const courseMeta = getCourseMeta(activeCourseFolder);
-            const courseDecks = userDecks.filter(d => inferCourseKey(d.course, d.category) === activeCourseFolder);
+            const courseDecks = userDecks.filter(d => inferCourseKey(d.course, d.category, d.title) === activeCourseFolder);
 
             const subjectCounts = { ALL: courseDecks.length };
             courseDecks.forEach(d => {
-                const cat = (d.category || "GENERAL").toUpperCase();
+                let cat = (d.category || "EE").toUpperCase();
+                if (cat === "GENERAL" && activeCourseFolder === "REE") cat = "EE";
                 subjectCounts[cat] = (subjectCounts[cat] || 0) + 1;
             });
 
-            const availableSubjects = Object.keys(subjectCounts);
-            availableSubjects.forEach(cat => {
+            Object.keys(subjectCounts).forEach(cat => {
                 const isSelected = activeCategoryFilter === cat;
                 const meta = getCategoryMeta(activeCourseFolder, cat);
                 const count = subjectCounts[cat];
-
                 const btn = document.createElement('button');
                 btn.onclick = () => setCategoryFilter(cat);
                 btn.className = isSelected 
                     ? "px-4 py-2.5 rounded-xl transition-all bg-indigo-600 text-white shadow-md shadow-indigo-600/20 flex items-center gap-2 shrink-0 font-extrabold"
                     : "px-4 py-2.5 rounded-xl transition-all bg-slate-800/90 text-slate-400 hover:bg-slate-700 hover:text-slate-200 border border-slate-700/60 flex items-center gap-2 shrink-0 font-bold";
-
                 btn.innerHTML = `
                     <i class="fa-solid ${cat === 'ALL' ? 'fa-border-all' : meta.icon}"></i>
                     <span>${cat === 'ALL' ? 'All Subjects' : meta.label}</span>
@@ -1427,16 +1157,10 @@
 
             const filteredDecks = courseDecks.filter(d => {
                 if (activeCategoryFilter === 'ALL') return true;
-                return (d.category || "GENERAL").toUpperCase() === activeCategoryFilter;
+                let cat = (d.category || "EE").toUpperCase();
+                if (cat === "GENERAL" && activeCourseFolder === "REE") cat = "EE";
+                return cat === activeCategoryFilter;
             });
-            
-            const sectionDecks = filteredDecks.map(d => d.id);
-            const sectionHist = examHistory.filter(h => sectionDecks.includes(h.id));
-            let sectionStatHtml = '';
-            if (sectionHist.length > 0) {
-                 const avg = Math.round(sectionHist.reduce((acc, curr) => acc + curr.accuracy, 0) / sectionHist.length);
-                 sectionStatHtml = `<div class="text-[11px] bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-xl font-extrabold border border-indigo-500/30 flex items-center gap-1.5 shadow-inner"><i class="fa-solid fa-chart-line"></i> Section Avg: ${avg}%</div>`;
-            }
 
             breadcrumb.innerHTML = `
                 <div class="flex items-center gap-2">
@@ -1450,15 +1174,6 @@
                         <span class="truncate max-w-[140px] sm:max-w-none">${courseMeta.title}</span>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    ${sectionStatHtml}
-                    ${activeCategoryFilter !== 'ALL' ? `
-                        <button onclick="deleteEntireSubject('${activeCourseFolder}', '${activeCategoryFilter}')" class="text-xs text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1 rounded-lg border border-rose-500/30 flex items-center gap-1.5 transition-all" title="Remove Subject">
-                            <i class="fa-solid fa-trash-can"></i>
-                            <span class="hidden sm:inline">Remove Subject</span>
-                        </button>
-                    ` : ''}
-                </div>
             `;
 
             if (filteredDecks.length === 0) {
@@ -1466,7 +1181,7 @@
                     <div class="col-span-full p-10 text-center bg-slate-900/60 rounded-2xl border border-slate-800 space-y-3 animate-pop">
                         <i class="fa-solid fa-folder-open text-4xl text-slate-600"></i>
                         <h3 class="font-bold text-slate-300 text-base">No Study Decks Found in this Folder</h3>
-                        <p class="text-xs text-slate-500 max-w-sm mx-auto">Tap "Import JSON File" or "Paste JSON" above to add your first drill for this section!</p>
+                        <p class="text-xs text-slate-500 max-w-sm mx-auto">Tap "AI Generator & Scanner" or "Import JSON" above to create your first drill!</p>
                     </div>
                 `;
                 return;
@@ -1474,36 +1189,13 @@
 
             filteredDecks.forEach((deck) => {
                 const originalIndex = userDecks.indexOf(deck);
-                const catKey = (deck.category || 'General').toUpperCase();
+                let catKey = (deck.category || 'EE').toUpperCase();
+                if (catKey === "GENERAL" && activeCourseFolder === "REE") catKey = "EE";
                 const catMeta = getCategoryMeta(activeCourseFolder, catKey);
-
-                const courseMetaObj = getCourseMeta(activeCourseFolder);
-                const presetSubjects = courseMetaObj.subjects || {};
-                const presetKeys = Object.keys(presetSubjects);
-                const isPreset = presetKeys.includes(catKey);
-
-                let optionsHtml = '';
-                presetKeys.forEach(pKey => {
-                    const label = presetSubjects[pKey].label || pKey;
-                    optionsHtml += `<option value="${pKey}" ${catKey === pKey ? 'selected' : ''}>${pKey} (${label})</option>`;
-                });
-                optionsHtml += `<option value="CUSTOM" ${!isPreset ? 'selected' : ''}>+ Custom Subject...</option>`;
-
-                const deckHist = examHistory.filter(h => h.id === deck.id);
-                let historyBadge = '';
-                if (deckHist.length > 0) {
-                    const bestAcc = Math.max(...deckHist.map(h => h.accuracy));
-                    historyBadge = `<div class="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold"><i class="fa-solid fa-trophy text-[11px]"></i> Best: ${bestAcc}%</div>`;
-                }
 
                 const card = document.createElement('div');
                 card.className = "bg-slate-900 border border-slate-800/90 hover:border-indigo-500/50 p-6 rounded-2xl transition-all hover:scale-[1.01] flex flex-col justify-between group cursor-pointer space-y-4 shadow-xl relative animate-pop";
-                
-                card.onclick = (e) => {
-                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.closest('.category-picker') || e.target.closest('.delete-btn')) return;
-                    selectDeck(originalIndex);
-                };
-
+                card.onclick = () => selectDeck(originalIndex);
                 card.innerHTML = `
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
@@ -1511,29 +1203,15 @@
                                 <i class="fa-solid ${catMeta.icon}"></i>
                                 <span>${catMeta.label}</span>
                             </span>
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-bold px-3 py-1 bg-slate-800/80 text-slate-400 rounded-full border border-slate-700/60">${deck.questions ? deck.questions.length : 0} Items</span>
-                                <button onclick="deleteDeck(event, ${originalIndex})" class="delete-btn text-slate-600 hover:text-rose-400 p-1 transition-colors" title="Delete Deck">
-                                    <i class="fa-solid fa-trash-can text-xs"></i>
-                                </button>
-                            </div>
+                            <span class="text-xs font-bold px-3 py-1 bg-slate-800/80 text-slate-400 rounded-full border border-slate-700/60">${deck.questions ? deck.questions.length : 0} Items</span>
                         </div>
                         <div>
                             <h3 class="font-extrabold text-lg text-slate-100 group-hover:text-indigo-300 transition-colors">${deck.title}</h3>
                             <p class="text-xs text-slate-400 leading-relaxed line-clamp-2 mt-1.5">${deck.desc || 'No description provided.'}</p>
-                            ${historyBadge}
                         </div>
                     </div>
-                    
-                    <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs flex-wrap gap-2">
-                        <div class="category-picker flex items-center gap-1.5 text-xs text-slate-500" title="Select or edit Subject">
-                            <span>Subject:</span>
-                            <select onchange="handleSubjectSelectChange(${originalIndex}, this.value)" class="bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2 py-1 font-bold text-xs focus:outline-none focus:border-indigo-500 cursor-pointer">
-                                ${optionsHtml}
-                            </select>
-                            <input type="text" id="custom-cat-input-${originalIndex}" value="${!isPreset ? catKey : ''}" placeholder="Enter subject..." onchange="updateDeckCategory(${originalIndex}, this.value)" class="${!isPreset ? '' : 'hidden'} bg-slate-800 text-indigo-300 border border-indigo-500/50 rounded-lg px-2 py-0.5 font-bold text-xs w-28 focus:outline-none focus:border-indigo-400">
-                        </div>
-
+                    <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                        <span class="text-slate-500 font-medium">Ready for drill</span>
                         <div class="text-indigo-400 font-bold flex items-center gap-1.5">
                             <span>Start Practice</span>
                             <i class="fa-solid fa-arrow-right group-hover:translate-x-1.5 transition-transform"></i>
@@ -1544,180 +1222,168 @@
             });
         }
 
-        function deleteDeck(event, idx) {
-            event.stopPropagation();
-            if (confirm("Are you sure you want to delete this study deck?")) {
-                userDecks.splice(idx, 1);
-                localStorage.setItem('ee_simulator_user_decks', JSON.stringify(userDecks));
-                renderDeckHub();
-                showToast("Deck deleted successfully.");
-            }
-        }
-
-        function deleteEntireSubject(courseKey, categoryKey) {
-            if (confirm(`Are you sure you want to remove all study decks under subject "${categoryKey}" in course "${courseKey}"?`)) {
-                userDecks = userDecks.filter(d => {
-                    const cKey = inferCourseKey(d.course, d.category);
-                    const cat = (d.category || "GENERAL").toUpperCase();
-                    return !(cKey === courseKey && cat === categoryKey);
-                });
-                localStorage.setItem('ee_simulator_user_decks', JSON.stringify(userDecks));
-                activeCategoryFilter = "ALL";
-                renderDeckHub();
-                showToast(`Subject "${categoryKey}" and its decks were removed successfully.`);
-            }
-        }
-
-        function handleSubjectSelectChange(deckIdx, val) {
-            if (val === 'CUSTOM') {
-                const input = document.getElementById(`custom-cat-input-${deckIdx}`);
-                if (input) {
-                    input.classList.remove('hidden');
-                    input.focus();
-                    input.select();
-                }
-            } else {
-                updateDeckCategory(deckIdx, val);
-            }
-        }
-
-        function updateDeckCategory(deckIdx, newCat) {
-            const cleaned = (newCat || "GENERAL").trim().toUpperCase();
-            if (!cleaned) return;
-            userDecks[deckIdx].category = cleaned;
-            userDecks[deckIdx].course = inferCourseKey(userDecks[deckIdx].course, cleaned);
-            localStorage.setItem('ee_simulator_user_decks', JSON.stringify(userDecks));
-            renderDeckHub();
-        }
-
         function selectDeck(idx) {
             if (!userDecks[idx]) return;
             activeDeck = userDecks[idx];
-
             document.getElementById('active-deck-title').textContent = activeDeck.title;
             document.getElementById('active-deck-desc').textContent = activeDeck.desc || 'No description provided.';
             document.getElementById('active-deck-count').textContent = `${activeDeck.questions ? activeDeck.questions.length : 0} Items`;
 
-            // Clickable Deck History Preview Box
-            const deckHist = examHistory.filter(h => h.id === activeDeck.id);
-            const historyBox = document.getElementById('start-card-history');
-            
-            if (deckHist.length > 0) {
-                const totalAttempts = deckHist.length;
-                const bestAccuracy = Math.max(...deckHist.map(h => h.accuracy));
-                const lastAttempt = deckHist[deckHist.length - 1];
-
-                historyBox.innerHTML = `
-                    <div class="flex items-center justify-between text-xs font-bold text-slate-300">
-                        <span class="flex items-center gap-1.5 group-hover:text-indigo-300 transition-colors">
-                            <i class="fa-solid fa-clock-rotate-left text-indigo-400"></i>
-                            <span>Past Drill Attempts (Click to View Stats)</span>
-                        </span>
-                        <span class="text-indigo-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-                            <span>${totalAttempts} Runs</span>
-                            <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                        </span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-                        <div class="bg-slate-900/80 p-2 rounded-lg border border-slate-700/50">
-                            <div class="text-slate-400 text-[10px]">Best Accuracy</div>
-                            <div class="font-extrabold text-emerald-400 text-sm">${bestAccuracy}%</div>
-                        </div>
-                        <div class="bg-slate-900/80 p-2 rounded-lg border border-slate-700/50">
-                            <div class="text-slate-400 text-[10px]">Last Attempt Score</div>
-                            <div class="font-extrabold text-amber-300 text-sm">${lastAttempt.score} pts (${lastAttempt.accuracy}%)</div>
-                        </div>
-                    </div>
-                `;
-                historyBox.classList.remove('hidden');
-            } else {
-                historyBox.classList.add('hidden');
-            }
-
             document.getElementById('deck-hub-screen').classList.add('hidden');
             document.getElementById('start-card').classList.remove('hidden');
+            renderSavedSessionsOnStartCard(activeDeck.id);
             triggerPopAnimation('start-card');
-            
-            const cMeta = getCourseMeta(activeDeck.course);
-            document.getElementById('deck-subtitle').textContent = `[${cMeta.title}] ${activeDeck.title}`;
-
-            checkSavedSession();
         }
 
-        function getSessionKey() {
-            return activeDeck ? `ee_sim_session_${activeDeck.id || activeDeck.title}` : null;
+        function updateDrillFormat(val) {
+            settings.drillFormat = val || 'mc';
+            saveSettings();
         }
 
-        function checkSavedSession() {
-            const key = getSessionKey();
-            const savedRaw = localStorage.getItem(key);
+        function updateSessionPassTarget(val) {
+            settings.passTarget = parseInt(val, 10) || 80;
+            const passDisplay = document.getElementById('pass-target-display');
+            if (passDisplay) passDisplay.textContent = `${settings.passTarget}%`;
+            saveSettings();
+        }
+
+        function updateShuffleFromStartCard(type, checked) {
+            if (type === 'q') settings.shuffleQuestions = checked;
+            if (type === 'c') settings.shuffleChoices = checked;
+            saveSettings();
+        }
+
+        function getSavedSessionsForDeck(deckId) {
+            try {
+                const all = localStorage.getItem('ee_simulator_active_sessions');
+                if (!all) return {};
+                const parsed = JSON.parse(all);
+                return parsed[deckId] || {};
+            } catch(e) {
+                return {};
+            }
+        }
+
+        function saveActiveSessionProgress(deckId, format, stateObj) {
+            try {
+                const all = localStorage.getItem('ee_simulator_active_sessions');
+                let parsed = all ? JSON.parse(all) : {};
+                if (!parsed[deckId]) parsed[deckId] = {};
+                parsed[deckId][format] = stateObj;
+                localStorage.setItem('ee_simulator_active_sessions', JSON.stringify(parsed));
+            } catch(e) {}
+        }
+
+        function clearActiveSessionProgress(deckId, format) {
+            try {
+                const all = localStorage.getItem('ee_simulator_active_sessions');
+                if (!all) return;
+                let parsed = JSON.parse(all);
+                if (parsed[deckId] && parsed[deckId][format]) {
+                    delete parsed[deckId][format];
+                    localStorage.setItem('ee_simulator_active_sessions', JSON.stringify(parsed));
+                }
+            } catch(e) {}
+        }
+
+        function renderSavedSessionsOnStartCard(deckId) {
             const banner = document.getElementById('saved-session-banner');
+            const container = document.getElementById('saved-formats-container');
             const continueBtn = document.getElementById('btn-continue-session');
+            const hintBadge = document.getElementById('saved-session-badge-hint');
+            if (!banner || !container || !continueBtn) return;
 
-            if (savedRaw) {
-                try {
-                    const saved = JSON.parse(savedRaw);
-                    if (saved && saved.activeQuestions && saved.currentIdx < saved.activeQuestions.length) {
-                        const total = saved.activeQuestions.length;
-                        const pct = Math.round((saved.currentIdx / total) * 100);
-                        const missed = saved.missedQuestions ? saved.missedQuestions.length : 0;
-                        const correct = saved.currentIdx - missed;
+            const savedMap = getSavedSessionsForDeck(deckId);
+            const formats = Object.keys(savedMap);
 
-                        document.getElementById('saved-progress-percent').textContent = `${pct}%`;
-                        document.getElementById('saved-progress-bar').style.width = `${Math.max(pct, 4)}%`;
-                        document.getElementById('saved-q-num').textContent = `${saved.currentIdx + 1}/${total}`;
-                        document.getElementById('saved-score').textContent = saved.score || 0;
-                        document.getElementById('saved-correct').textContent = correct >= 0 ? correct : 0;
-                        document.getElementById('saved-missed').textContent = missed;
-
-                        banner.classList.remove('hidden');
-                        continueBtn.disabled = false;
-                        continueBtn.title = "Resume your saved progress";
-                        return;
-                    }
-                } catch(e) {}
+            if (formats.length === 0) {
+                banner.classList.add('hidden');
+                activeSavedFormatToContinue = null;
+                continueBtn.disabled = true;
+                return;
             }
 
-            banner.classList.add('hidden');
+            banner.classList.remove('hidden');
+            container.innerHTML = '';
+            activeSavedFormatToContinue = null;
             continueBtn.disabled = true;
-            continueBtn.title = "No active session saved for this deck";
-        }
 
-        function saveSession() {
-            if (settings.drillFormat === 'card') return; // Don't save flashcard sessions
-            const key = getSessionKey();
-            if (!key) return;
-
-            const sessionData = {
-                deckId: activeDeck.id,
-                currentIdx: currentIdx,
-                score: score,
-                streak: streak,
-                maxStreak: maxStreak,
-                missedQuestions: missedQuestions,
-                activeQuestions: activeQuestions
+            const formatLabels = {
+                'mc': { name: 'Multiple Choice', icon: 'fa-list-check', color: 'text-indigo-400 border-indigo-500/40' },
+                'tf': { name: 'True / False', icon: 'fa-toggle-on', color: 'text-amber-400 border-amber-500/40' },
+                'fill': { name: 'Fill in the Blanks', icon: 'fa-pen-to-square', color: 'text-cyan-400 border-cyan-500/40' },
+                'card': { name: 'Flashcard Mode', icon: 'fa-clone', color: 'text-purple-400 border-purple-500/40' }
             };
 
-            localStorage.setItem(key, JSON.stringify(sessionData));
+            formats.forEach(fmt => {
+                const sess = savedMap[fmt];
+                const meta = formatLabels[fmt] || { name: fmt, icon: 'fa-file', color: 'text-slate-400 border-slate-700' };
+                const pct = sess.totalQ > 0 ? Math.round((sess.currentIdx / sess.totalQ) * 100) : 0;
+                const acc = sess.answeredCount > 0 ? Math.round((sess.correctCount / sess.answeredCount) * 100) : 0;
+
+                const row = document.createElement('div');
+                row.id = `saved-row-${fmt}`;
+                row.onclick = () => selectSavedSessionFormat(fmt, formats.length);
+                row.className = "bg-slate-900 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 p-3 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-3 group";
+                row.innerHTML = `
+                    <div class="flex items-center gap-2.5 shrink-0 w-36 sm:w-44">
+                        <div class="p-2 rounded-lg bg-slate-800 ${meta.color} border">
+                            <i class="fa-solid ${meta.icon} text-xs"></i>
+                        </div>
+                        <span class="font-bold text-xs text-slate-200 truncate">${meta.name}</span>
+                    </div>
+                    <div class="flex-1 hidden sm:flex items-center gap-2">
+                        <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-indigo-500 rounded-full" style="width: ${Math.max(pct, 3)}%"></div>
+                        </div>
+                        <span class="text-[11px] font-bold text-slate-400 shrink-0">${pct}%</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-[11px] font-semibold text-slate-300 shrink-0">
+                        <span class="bg-slate-800/80 px-2 py-1 rounded border border-slate-700/50 whitespace-nowrap">Item: <b class="text-white">${sess.currentIdx + 1}/${sess.totalQ}</b></span>
+                        <span class="bg-slate-800/80 px-2 py-1 rounded border border-slate-700/50 whitespace-nowrap">Score: <b class="text-amber-300">${sess.score}</b></span>
+                        <span class="bg-slate-800/80 px-2 py-1 rounded border border-slate-700/50 whitespace-nowrap">Acc: <b class="text-emerald-400">${acc}%</b></span>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+
+            if (formats.length === 1) {
+                if (hintBadge) hintBadge.textContent = "1 Saved Session (Auto-selected)";
+                selectSavedSessionFormat(formats[0], 1);
+            } else {
+                if (hintBadge) hintBadge.textContent = `${formats.length} Saved Sessions - Tap to Select`;
+            }
         }
 
-        function clearSession() {
-            const key = getSessionKey();
-            if (key) localStorage.removeItem(key);
+        function selectSavedSessionFormat(fmt) {
+            activeSavedFormatToContinue = fmt;
+            const continueBtn = document.getElementById('btn-continue-session');
+            if (continueBtn) continueBtn.disabled = false;
+
+            const allRows = document.querySelectorAll('[id^="saved-row-"]');
+            allRows.forEach(r => {
+                r.className = "bg-slate-900 hover:bg-slate-800/80 border border-slate-800 p-3 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-3 group";
+            });
+
+            const selectedRow = document.getElementById(`saved-row-${fmt}`);
+            if (selectedRow) {
+                selectedRow.className = "bg-slate-900 border-2 border-indigo-500 p-3 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-3 shadow-lg shadow-indigo-500/20";
+            }
+
+            const dropdown = document.getElementById('drill-format-dropdown');
+            if (dropdown) dropdown.value = fmt;
+            settings.drillFormat = fmt;
+            saveSettings();
         }
 
         function continueSession() {
-            const key = getSessionKey();
-            const savedRaw = localStorage.getItem(key);
-            if (!savedRaw) return;
-
-            const saved = JSON.parse(savedRaw);
-            activeQuestions = saved.activeQuestions;
-            currentIdx = saved.currentIdx;
-            score = saved.score;
-            streak = saved.streak;
-            maxStreak = saved.maxStreak;
-            missedQuestions = saved.missedQuestions || [];
+            if (!activeDeck || !activeSavedFormatToContinue) return;
+            const savedMap = getSavedSessionsForDeck(activeDeck.id);
+            const sess = savedMap[activeSavedFormatToContinue];
+            if (!sess) {
+                startQuiz();
+                return;
+            }
 
             document.getElementById('start-card').classList.add('hidden');
             document.getElementById('results-card').classList.add('hidden');
@@ -1727,31 +1393,87 @@
             document.getElementById('hud-stats').classList.add('flex');
 
             triggerPopAnimation('quiz-card');
+
+            activeQuestions = sess.activeQuestions || prepareQuestions();
+            currentIdx = sess.currentIdx || 0;
+            score = sess.score || 0;
+            streak = sess.streak || 0;
+            maxStreak = sess.maxStreak || 0;
+            missedQuestions = sess.missedQuestions || [];
+            settings.drillFormat = activeSavedFormatToContinue;
+            const dropdown = document.getElementById('drill-format-dropdown');
+            if (dropdown) dropdown.value = activeSavedFormatToContinue;
+
             document.getElementById('total-q-num').textContent = activeQuestions.length;
             updateHUD();
             loadQuestion();
         }
 
-        function updateHUD() {
-            const hudStats = document.getElementById('hud-stats');
-            if (settings.drillFormat === 'card') {
-                if (hudStats) hudStats.classList.add('hidden');
-            } else {
-                if (hudStats) {
-                    hudStats.classList.remove('hidden');
-                    hudStats.classList.add('flex');
+        function prepareQuestions() {
+            if (!activeDeck || !activeDeck.questions) return [];
+            const fmt = settings.drillFormat || 'mc';
+
+            if (fmt === 'tf') {
+                return activeDeck.questions.map(q => {
+                    const textLower = q.q.toLowerCase();
+                    const isWhatOrHow = textLower.startsWith('what') || textLower.startsWith('how') || textLower.startsWith('why') || textLower.startsWith('calculate') || textLower.startsWith('find');
+                    
+                    if (isWhatOrHow) {
+                        return {
+                            q: q.q,
+                            options: q.options,
+                            correct: q.correct,
+                            keyword: q.keyword || "",
+                            because: q.because
+                        };
+                    }
+
+                    const isTrueState = Math.random() < 0.5;
+                    let statementText = q.q;
+                    let correctBool = true;
+                    const correctAns = q.options[q.correct];
+                    const validDistractors = q.options.filter((opt, idx) => idx !== q.correct);
+                    const distractor = validDistractors.length > 0 ? validDistractors[Math.floor(Math.random() * validDistractors.length)] : "False Concept";
+
+                    if (statementText.includes('____')) {
+                        statementText = statementText.replace('____', isTrueState ? `<b>${correctAns}</b>` : `<b>${distractor}</b>`);
+                        correctBool = isTrueState;
+                    } else {
+                        if (!isTrueState) {
+                            statementText = `${statementText} (Assuming statement states: ${distractor})`;
+                            correctBool = false;
+                        }
+                    }
+
+                    return {
+                        q: `True or False: ${statementText}`,
+                        options: ["True", "False"],
+                        correct: correctBool ? 0 : 1,
+                        keyword: q.keyword || "",
+                        because: `${correctBool ? "True." : "False."} ${q.because}`
+                    };
+                });
+            }
+
+            let prepared = activeDeck.questions.map(q => {
+                let options = [...q.options];
+                let correctText = options[q.correct];
+                if (settings.shuffleChoices && fmt === 'mc') {
+                    options = shuffleArray(options);
                 }
-                document.getElementById('score-display').textContent = score;
-                document.getElementById('streak-display').textContent = streak;
-            }
+                return {
+                    q: q.q,
+                    options: options,
+                    correct: options.indexOf(correctText) >= 0 ? options.indexOf(correctText) : 0,
+                    keyword: q.keyword || "",
+                    because: q.because || "No explanation provided."
+                };
+            });
 
-            document.getElementById('current-q-num').textContent = currentIdx + 1;
-
-            if (activeQuestions && activeQuestions.length > 0) {
-                const pct = Math.round(((currentIdx) / activeQuestions.length) * 100);
-                document.getElementById('progress-bar').style.width = `${Math.max(pct, 3)}%`;
-                document.getElementById('progress-percent').textContent = `${pct}%`;
+            if (settings.shuffleQuestions) {
+                prepared = shuffleArray(prepared);
             }
+            return prepared;
         }
 
         function shuffleArray(array) {
@@ -1763,113 +1485,17 @@
             return arr;
         }
 
-        function prepareQuestions() {
-            const fmt = settings.drillFormat || 'mc';
-
-            let prepared = activeDeck.questions.map(q => {
-                let options = [...q.options];
-                let rawCorrectOption = options[q.correct] || options[0];
-                let keyword = q.keyword || "";
-
-                if (fmt === 'tf') {
-                    // DYNAMIC TRUE / FALSE CONVERTER
-                    const validOptions = options.filter(opt => !isGenericOption(opt));
-                    const isTrue = Math.random() < 0.5;
-
-                    let statementText = q.q;
-                    let tfCorrectIdx = isTrue ? 0 : 1; // 0 = True, 1 = False
-                    let insertedTerm = "";
-
-                    if (isTrue) {
-                        if (isGenericOption(rawCorrectOption)) {
-                            // If correct answer was "All of the above", combine valid options
-                            if (rawCorrectOption.toLowerCase().includes("all")) {
-                                insertedTerm = validOptions.join(", ");
-                            } else {
-                                insertedTerm = keyword || "a specific valid concept";
-                            }
-                        } else {
-                            insertedTerm = rawCorrectOption;
-                        }
-                    } else {
-                        // Create False Statement: pick a wrong option from valid choices
-                        const distractors = validOptions.filter(opt => opt !== rawCorrectOption);
-                        if (distractors.length > 0) {
-                            insertedTerm = distractors[Math.floor(Math.random() * distractors.length)];
-                        } else {
-                            insertedTerm = "Incorrect / Opposite Factor";
-                        }
-                    }
-
-                    // Insert into blank or format as statement
-                    if (statementText.includes("____") || statementText.includes("....")) {
-                        statementText = statementText.replace(/____|\.\.\.\./g, `"${insertedTerm}"`);
-                    } else {
-                        statementText = `Statement: ${statementText} — ${insertedTerm}`;
-                    }
-
-                    let tfBecause = "";
-                    if (isTrue) {
-                        tfBecause = `Statement is <b>TRUE</b>.<br><br><b>BECAUSE:</b> ${q.because}`;
-                    } else {
-                        tfBecause = `Statement is <b>FALSE</b>! The statement incorrectly substituted <i>"${insertedTerm}"</i>.<br><br><b>REAL CONCEPT:</b> The correct answer is <b>"${rawCorrectOption}"</b>.<br><b>BECAUSE:</b> ${q.because}`;
-                    }
-
-                    return {
-                        q: statementText,
-                        options: ["True", "False"],
-                        correct: tfCorrectIdx,
-                        keyword: keyword,
-                        because: tfBecause,
-                        originalQ: q.q
-                    };
-                }
-
-                if (fmt === 'fill') {
-                    // SMART FILL-IN-THE-BLANKS
-                    let targetAnswer = rawCorrectOption;
-                    if (isGenericOption(targetAnswer)) {
-                        targetAnswer = keyword || options.find(o => !isGenericOption(o)) || "Correct Concept";
-                    }
-
-                    return {
-                        q: q.q,
-                        options: [targetAnswer],
-                        correct: 0,
-                        keyword: keyword,
-                        because: q.because,
-                        targetFillAnswer: targetAnswer
-                    };
-                }
-
-                // MULTIPLE CHOICE OR FLASHCARD DEFAULT
-                if (settings.shuffleChoices && fmt === 'mc') {
-                    options = shuffleArray(options);
-                }
-
-                return {
-                    q: q.q,
-                    options: options,
-                    correct: options.indexOf(rawCorrectOption),
-                    keyword: keyword,
-                    because: q.because
-                };
-            });
-
-            if (settings.shuffleQuestions) {
-                prepared = shuffleArray(prepared);
-            }
-
-            return prepared;
-        }
-
         function startQuiz() {
-            clearSession();
+            if (activeDeck) {
+                clearActiveSessionProgress(activeDeck.id, settings.drillFormat);
+            }
 
             document.getElementById('start-card').classList.add('hidden');
             document.getElementById('results-card').classList.add('hidden');
             document.getElementById('quiz-card').classList.remove('hidden');
             document.getElementById('quiz-card').classList.add('flex');
+            document.getElementById('hud-stats').classList.remove('hidden');
+            document.getElementById('hud-stats').classList.add('flex');
 
             triggerPopAnimation('quiz-card');
 
@@ -1883,173 +1509,121 @@
             document.getElementById('total-q-num').textContent = activeQuestions.length;
             updateHUD();
             loadQuestion();
-            saveSession();
+        }
+
+        function updateHUD() {
+            document.getElementById('score-display').textContent = score;
+            document.getElementById('streak-display').textContent = streak;
+            document.getElementById('current-q-num').textContent = currentIdx + 1;
+
+            if (activeQuestions && activeQuestions.length > 0) {
+                const pct = Math.round(((currentIdx) / activeQuestions.length) * 100);
+                document.getElementById('progress-bar').style.width = `${Math.max(pct, 3)}%`;
+                document.getElementById('progress-percent').textContent = `${pct}%`;
+            }
+
+            if (activeDeck && settings.drillFormat !== 'card') {
+                const answeredCount = currentIdx;
+                const correctCount = answeredCount - missedQuestions.length;
+                saveActiveSessionProgress(activeDeck.id, settings.drillFormat, {
+                    currentIdx: currentIdx,
+                    totalQ: activeQuestions.length,
+                    score: score,
+                    streak: streak,
+                    maxStreak: maxStreak,
+                    missedQuestions: missedQuestions,
+                    activeQuestions: activeQuestions,
+                    answeredCount: answeredCount,
+                    correctCount: correctCount >= 0 ? correctCount : 0
+                });
+            }
         }
 
         function loadQuestion() {
             answered = false;
-            cardFlipped = false;
             document.getElementById('next-btn').classList.add('hidden');
             document.getElementById('explanation-box').classList.add('hidden');
 
             const q = activeQuestions[currentIdx];
-            const fmt = settings.drillFormat || 'mc';
+            document.getElementById('question-text').innerHTML = `${currentIdx + 1}. ${q.q}`;
 
-            const qTextEl = document.getElementById('question-text');
             const choicesContainer = document.getElementById('choices-container');
             choicesContainer.innerHTML = '';
+            const fmt = settings.drillFormat || 'mc';
 
-            if (fmt === 'card') {
-                // 3D FLASHCARD FLIP INTERFACE
-                qTextEl.textContent = `Flashcard ${currentIdx + 1} of ${activeQuestions.length}`;
-
-                choicesContainer.innerHTML = `
-                    <div class="perspective-1000 w-full min-h-[260px] my-2 cursor-pointer" onclick="flipFlashcard()">
-                        <div id="flashcard-inner" class="relative w-full h-full transform-style-3d bg-slate-950 border border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl transition-transform duration-500 min-h-[260px]">
-                            
-                            <!-- Front Side -->
-                            <div class="backface-hidden w-full h-full flex flex-col justify-between space-y-4">
-                                <div class="flex items-center justify-between text-xs text-indigo-400 font-bold uppercase tracking-wider">
-                                    <span><i class="fa-solid fa-clone mr-1.5"></i> Flashcard Front</span>
-                                    <span class="text-slate-500 font-normal">Tap card to flip <i class="fa-solid fa-rotate text-[10px] ml-1"></i></span>
-                                </div>
-                                <div class="text-base sm:text-xl font-semibold text-slate-100 leading-relaxed text-center py-4 flex-1 flex items-center justify-center">
-                                    ${q.q}
-                                </div>
-                                <div class="text-center text-xs text-slate-500 font-medium">Click to reveal answer & explanation</div>
-                            </div>
-
-                            <!-- Back Side -->
-                            <div class="backface-hidden rotate-y-180 absolute inset-0 w-full h-full bg-slate-900 border border-indigo-500/40 rounded-2xl p-6 sm:p-8 flex flex-col justify-between space-y-4 overflow-y-auto custom-scrollbar">
-                                <div class="flex items-center justify-between text-xs text-emerald-400 font-bold uppercase tracking-wider">
-                                    <span><i class="fa-solid fa-circle-check mr-1.5"></i> Correct Concept Answer</span>
-                                    ${q.keyword ? `<span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[11px]">🔑 ${q.keyword}</span>` : ''}
-                                </div>
-                                <div class="text-lg sm:text-2xl font-black text-emerald-300 text-center py-2">
-                                    ${q.options[q.correct]}
-                                </div>
-                                <div class="text-xs sm:text-sm text-slate-300 border-t border-slate-800 pt-3 leading-relaxed text-left">
-                                    <b>BECAUSE:</b> ${q.because}
-                                </div>
-                            </div>
+            if (fmt === 'tf' && q.options.length === 2 && (q.options[0] === "True" || q.options[0] === "T")) {
+                q.options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = `w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.99] animate-pop`;
+                    btn.onclick = () => selectOption(idx);
+                    btn.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 flex items-center justify-center font-extrabold text-xs">
+                                ${opt === "True" ? "T" : "F"}
+                            </span>
+                            <span class="text-slate-200 text-base font-bold">${opt}</span>
                         </div>
+                        <i class="fa-regular fa-circle text-slate-600 text-sm"></i>
+                    `;
+                    choicesContainer.appendChild(btn);
+                });
+            } else if (fmt === 'fill') {
+                choicesContainer.innerHTML = `
+                    <div class="space-y-3 animate-pop">
+                        <input type="text" id="fill-input" placeholder="Type your answer here..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm font-bold text-slate-100 focus:outline-none focus:border-indigo-500">
+                        <button onclick="checkFillAnswer()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all text-xs sm:text-sm">
+                            Submit Answer
+                        </button>
                     </div>
-
-                    <div class="flex items-center justify-between gap-3 pt-2">
-                        <button onclick="prevFlashcard()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all">
-                            <i class="fa-solid fa-chevron-left"></i> Previous
-                        </button>
-                        <button onclick="flipFlashcard()" class="px-5 py-2.5 bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/40 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all">
-                            <i class="fa-solid fa-rotate"></i> Flip Card
-                        </button>
-                        <button onclick="nextFlashcard()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md">
-                            Next Card <i class="fa-solid fa-chevron-right"></i>
+                `;
+            } else if (fmt === 'card') {
+                choicesContainer.innerHTML = `
+                    <div class="bg-slate-950 border border-slate-800/80 p-8 rounded-2xl text-center space-y-4 animate-pop">
+                        <div class="text-xs text-slate-500 font-bold uppercase tracking-wider">Flashcard Mode (Non-Graded)</div>
+                        <div id="card-answer" class="hidden text-lg font-bold text-emerald-400">${q.options[q.correct]}</div>
+                        <button id="card-reveal-btn" onclick="revealFlashcardAnswer()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition-all">
+                            Show Answer
                         </button>
                     </div>
                 `;
             } else {
-                qTextEl.textContent = `${currentIdx + 1}. ${q.q}`;
-
-                if (fmt === 'tf') {
-                    const tfOptions = ["True", "False"];
-                    tfOptions.forEach((opt, idx) => {
-                        const btn = document.createElement('button');
-                        btn.className = `w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.99] animate-pop`;
-                        btn.onclick = () => selectOption(idx);
-
-                        btn.innerHTML = `
-                            <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 flex items-center justify-center font-extrabold text-xs">
-                                    ${opt === "True" ? "T" : "F"}
-                                </span>
-                                <span class="text-slate-200 text-base font-bold">${opt}</span>
-                            </div>
-                            <i class="fa-regular fa-circle text-slate-600 text-sm"></i>
-                        `;
-                        choicesContainer.appendChild(btn);
-                    });
-                } else if (fmt === 'fill') {
-                    choicesContainer.innerHTML = `
-                        <div class="space-y-3 animate-pop">
-                            <input type="text" id="fill-input" placeholder="Type the key concept/term here..." onkeydown="if(event.key==='Enter') checkFillAnswer()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm font-bold text-slate-100 focus:outline-none focus:border-indigo-500 shadow-inner">
-                            <button onclick="checkFillAnswer()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all text-xs sm:text-sm shadow-md flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-paper-plane text-xs"></i>
-                                <span>Submit Answer</span>
-                            </button>
+                const letters = ['A', 'B', 'C', 'D'];
+                q.options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = `w-full text-left p-3.5 sm:p-4 rounded-xl border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.99] animate-pop`;
+                    btn.onclick = () => selectOption(idx);
+                    btn.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 flex items-center justify-center font-bold text-xs group-hover:border-indigo-500 group-hover:text-indigo-400 transition-colors">
+                                ${letters[idx]}
+                            </span>
+                            <span class="text-slate-200 text-sm font-medium leading-snug">${opt}</span>
                         </div>
+                        <i class="fa-regular fa-circle text-slate-600 group-hover:text-slate-400 text-sm"></i>
                     `;
-                    setTimeout(() => {
-                        const input = document.getElementById('fill-input');
-                        if (input) input.focus();
-                    }, 100);
-                } else {
-                    // MULTIPLE CHOICE DEFAULT
-                    const letters = ['A', 'B', 'C', 'D'];
-                    q.options.forEach((opt, idx) => {
-                        const btn = document.createElement('button');
-                        btn.className = `w-full text-left p-3.5 sm:p-4 rounded-xl border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.99] animate-pop`;
-                        btn.onclick = () => selectOption(idx);
-
-                        btn.innerHTML = `
-                            <div class="flex items-center gap-3">
-                                <span class="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 flex items-center justify-center font-bold text-xs group-hover:border-indigo-500 group-hover:text-indigo-400 transition-colors">
-                                    ${letters[idx]}
-                                </span>
-                                <span class="text-slate-200 text-sm font-medium leading-snug">${opt}</span>
-                            </div>
-                            <i class="fa-regular fa-circle text-slate-600 group-hover:text-slate-400 text-sm"></i>
-                        `;
-                        choicesContainer.appendChild(btn);
-                    });
-                }
+                    choicesContainer.appendChild(btn);
+                });
             }
-
             updateHUD();
-        }
-
-        function flipFlashcard() {
-            const inner = document.getElementById('flashcard-inner');
-            if (inner) {
-                cardFlipped = !cardFlipped;
-                if (cardFlipped) {
-                    inner.classList.add('rotate-y-180');
-                } else {
-                    inner.classList.remove('rotate-y-180');
-                }
-            }
-        }
-
-        function prevFlashcard() {
-            if (currentIdx > 0) {
-                currentIdx--;
-                loadQuestion();
-            } else {
-                showToast("This is the first card.");
-            }
-        }
-
-        function nextFlashcard() {
-            currentIdx++;
-            if (currentIdx < activeQuestions.length) {
-                loadQuestion();
-            } else {
-                showResults();
-            }
         }
 
         function checkFillAnswer() {
             const input = document.getElementById('fill-input');
-            if (!input || !input.value.trim()) {
-                showToast("Please type an answer before submitting.", true);
-                return;
-            }
+            if (!input || !input.value.trim()) return;
             const q = activeQuestions[currentIdx];
-            const targetAns = (q.targetFillAnswer || q.options[q.correct] || "").toLowerCase().trim();
+            const correctText = q.options[q.correct].toLowerCase().trim();
             const userText = input.value.toLowerCase().trim();
+            selectOption(userText === correctText ? q.correct : -1);
+        }
 
-            const isMatch = (userText === targetAns) || (targetAns.length > 3 && userText.includes(targetAns)) || (userText.length > 3 && targetAns.includes(userText));
-
-            selectOption(isMatch ? q.correct : -1);
+        function revealFlashcardAnswer() {
+            const cardAns = document.getElementById('card-answer');
+            const revealBtn = document.getElementById('card-reveal-btn');
+            if (cardAns && revealBtn) {
+                cardAns.classList.remove('hidden');
+                revealBtn.classList.add('hidden');
+                selectOption(activeQuestions[currentIdx].correct);
+            }
         }
 
         function selectOption(selectedIdx) {
@@ -2057,9 +1631,9 @@
             answered = true;
 
             const q = activeQuestions[currentIdx];
-            const choicesContainer = document.getElementById('choices-container');
-            const buttons = choicesContainer.children;
+            const buttons = document.getElementById('choices-container').children;
             const isCorrect = (selectedIdx === q.correct);
+            const fmt = settings.drillFormat;
 
             const explanationBox = document.getElementById('explanation-box');
             const explanationTitle = document.getElementById('explanation-title');
@@ -2075,6 +1649,17 @@
                 keywordBadge.classList.add('hidden');
             }
 
+            if (fmt === 'card') {
+                explanationText.innerHTML = `<b>Answer:</b> ${q.options[q.correct]}<br><br><b>BECAUSE:</b> ${q.because}`;
+                explanationBox.className = "p-4 rounded-xl border border-indigo-500/30 bg-indigo-500/5 text-sm leading-relaxed space-y-2 animate-pop";
+                explanationTitle.className = "flex items-center gap-2 font-bold text-indigo-400";
+                explanationTitle.innerHTML = `<i class="fa-solid fa-clone"></i> FLASHCARD REVIEW`;
+                explanationBox.classList.remove('hidden');
+                nextBtn.classList.remove('hidden');
+                nextBtn.classList.add('inline-flex');
+                return;
+            }
+
             if (isCorrect) {
                 streak++;
                 if (streak > maxStreak) maxStreak = streak;
@@ -2086,7 +1671,6 @@
                     const icon = buttons[selectedIdx].querySelector('i');
                     if (icon) icon.className = "fa-solid fa-circle-check text-emerald-400 text-base";
                 }
-
                 explanationBox.className = "p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 text-sm leading-relaxed space-y-2 animate-pop";
                 explanationTitle.className = "flex items-center gap-2 font-bold text-emerald-400";
                 explanationTitle.innerHTML = `<i class="fa-solid fa-circle-check"></i> CORRECT (+${pointsGained} pts)`;
@@ -2096,7 +1680,7 @@
                     num: currentIdx + 1,
                     question: q.q,
                     userAns: selectedIdx >= 0 ? q.options[selectedIdx] : "Written Input / Missed",
-                    correctAns: q.options[q.correct] || q.targetFillAnswer || "Correct Concept",
+                    correctAns: q.options[q.correct],
                     keyword: q.keyword,
                     because: q.because
                 });
@@ -2109,7 +1693,6 @@
                 if (buttons[q.correct]) {
                     buttons[q.correct].className = "w-full text-left p-3.5 sm:p-4 rounded-xl border-2 border-emerald-500/80 bg-emerald-500/10 text-emerald-300 flex items-center justify-between font-medium";
                 }
-
                 explanationBox.className = "p-4 rounded-xl border border-rose-500/30 bg-rose-500/5 text-sm leading-relaxed space-y-2 animate-pop";
                 explanationTitle.className = "flex items-center gap-2 font-bold text-rose-400";
                 explanationTitle.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> INCORRECT`;
@@ -2120,36 +1703,35 @@
                 btn.classList.remove('hover:bg-slate-800', 'group');
             }
 
-            explanationText.innerHTML = `<b>Correct Concept:</b> ${q.options[q.correct] || q.targetFillAnswer}<br><br>${q.because}`;
+            explanationText.innerHTML = `<b>Correct Answer:</b> ${q.options[q.correct]}<br><br><b>BECAUSE:</b> ${q.because}`;
             explanationBox.classList.remove('hidden');
             nextBtn.classList.remove('hidden');
             nextBtn.classList.add('inline-flex');
-
             updateHUD();
-            saveSession();
         }
 
         function nextQuestion() {
             currentIdx++;
             if (currentIdx < activeQuestions.length) {
-                saveSession();
                 loadQuestion();
             } else {
-                clearSession();
-                showResults();
+                if (settings.drillFormat === 'card') {
+                    if (activeDeck) clearActiveSessionProgress(activeDeck.id, 'card');
+                    showDeckHub();
+                    showToast("✨ Flashcard review completed!");
+                } else {
+                    showResults();
+                }
             }
         }
 
-        function getRandomMotivation(array) {
-            return array[Math.floor(Math.random() * array.length)];
-        }
-
         function showResults() {
+            if (activeDeck) clearActiveSessionProgress(activeDeck.id, settings.drillFormat);
+
             document.getElementById('quiz-card').classList.add('hidden');
             document.getElementById('quiz-card').classList.remove('flex');
             document.getElementById('results-card').classList.remove('hidden');
             document.getElementById('hud-stats').classList.add('hidden');
-
             triggerPopAnimation('results-card');
 
             const totalQ = activeQuestions.length;
@@ -2157,25 +1739,6 @@
             const accuracy = Math.round((correctCount / totalQ) * 100);
             const passTarget = settings.passTarget;
             const isPassed = accuracy >= passTarget;
-            
-            const deckCourse = inferCourseKey(activeDeck.course, activeDeck.category);
-            const deckCat = (activeDeck.category || "GENERAL").toUpperCase();
-
-            // EXCLUDE FLASHCARDS FROM EXAM HISTORY RECORDS
-            if (settings.drillFormat !== 'card') {
-                examHistory.push({
-                    id: activeDeck.id,
-                    title: activeDeck.title,
-                    course: deckCourse,
-                    category: deckCat,
-                    date: new Date().getTime(),
-                    score: score,
-                    totalQ: totalQ,
-                    accuracy: accuracy,
-                    passed: isPassed
-                });
-                localStorage.setItem('ee_simulator_history', JSON.stringify(examHistory));
-            }
 
             document.getElementById('final-score').textContent = score;
             document.getElementById('final-accuracy').textContent = `${accuracy}%`;
@@ -2183,48 +1746,18 @@
             const statusBadge = document.getElementById('final-status-badge');
             const badgeIcon = document.getElementById('badge-icon');
             const resultsTitle = document.getElementById('results-title');
-            const motivationBox = document.getElementById('motivation-box');
 
-            let message = "";
-
-            if (settings.drillFormat === 'card') {
-                statusBadge.textContent = "FLASHCARD REVIEW COMPLETE";
-                statusBadge.className = "text-xl font-black text-indigo-400";
-                badgeIcon.className = "inline-flex p-4 rounded-full text-4xl mb-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/30";
-                resultsTitle.textContent = "Flashcard Deck Reviewed! 🎴";
-                message = "Great flashcard session! Flashcard runs are stress-free memory builders and do not affect your formal exam history grades.";
-            } else if (accuracy >= 90) {
-                statusBadge.textContent = "PASSED (EXCELLENT)";
-                statusBadge.className = "text-xl font-black text-emerald-400";
-                badgeIcon.className = "inline-flex p-4 rounded-full text-4xl mb-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
-                resultsTitle.textContent = "Board Exam Ready! ⚡";
-                message = getRandomMotivation(motivationalBank.mastery);
-            } else if (isPassed) {
+            if (isPassed) {
                 statusBadge.textContent = "PASSED";
                 statusBadge.className = "text-xl font-black text-emerald-400";
-                badgeIcon.className = "inline-flex p-4 rounded-full text-4xl mb-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/30";
-                resultsTitle.textContent = "Target Cleared! 🎯";
-                message = getRandomMotivation(motivationalBank.pass);
-            } else if (accuracy >= (passTarget - 15)) {
-                statusBadge.textContent = "NEAR PASS";
-                statusBadge.className = "text-xl font-black text-amber-400";
-                badgeIcon.className = "inline-flex p-4 rounded-full text-4xl mb-1 bg-amber-500/10 text-amber-400 border border-amber-500/30";
-                resultsTitle.textContent = "Almost There! 📈";
-                message = getRandomMotivation(motivationalBank.nearPass);
+                badgeIcon.className = "inline-flex p-4 rounded-full text-4xl mb-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
+                resultsTitle.textContent = "Board Exam Ready! 🎯";
             } else {
                 statusBadge.textContent = "NEEDS REVIEW";
                 statusBadge.className = "text-xl font-black text-rose-400";
                 badgeIcon.className = "inline-flex p-4 rounded-full text-4xl mb-1 bg-rose-500/10 text-rose-400 border border-rose-500/30";
-                resultsTitle.textContent = "Keep Drilling! 📚";
-                message = getRandomMotivation(motivationalBank.needsReview);
+                resultsTitle.textContent = "Keep Practice Drilling! 📚";
             }
-
-            motivationBox.innerHTML = `
-                <div class="flex items-start gap-2.5">
-                    <i class="fa-solid fa-quote-left text-indigo-400 text-sm mt-0.5"></i>
-                    <p class="font-medium italic">${message}</p>
-                </div>
-            `;
 
             const missedList = document.getElementById('missed-list');
             const missedBadge = document.getElementById('missed-count-badge');
@@ -2233,7 +1766,7 @@
             if (missedQuestions.length === 0) {
                 missedBadge.className = "px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full text-xs font-semibold";
                 missedBadge.textContent = "Perfect Score!";
-                missedList.innerHTML = `<div class="p-4 bg-slate-800/40 rounded-xl text-center text-xs text-slate-400">You got every single item right! Outstanding work!</div>`;
+                missedList.innerHTML = `<div class="p-4 bg-slate-800/40 rounded-xl text-center text-xs text-slate-400">You got every single question right! Outstanding work!</div>`;
             } else {
                 missedBadge.className = "px-2 py-0.5 bg-rose-500/20 text-rose-400 rounded-full text-xs font-semibold";
                 missedBadge.textContent = `${missedQuestions.length} Missed Items`;
@@ -2255,9 +1788,378 @@
             }
         }
 
+        async function callGeminiApi(payload) {
+            const apiKey = settings.geminiApiKey || "";
+            if (!apiKey) {
+                throw new Error("Missing Gemini API Key. Please enter your API key in Settings.");
+            }
+            const baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent`;
+            const apiUrl = `${baseUrl}?key=${apiKey}`;
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            if (!response.ok) {
+                const errBody = await response.json().catch(() => ({}));
+                const errMsg = errBody?.error?.message || `API HTTP Error ${response.status}`;
+                throw new Error(errMsg);
+            }
+            return await response.json();
+        }
+
+        let currentAiTab = 'prompt';
+        let aiBase64Image = null;
+        let aiMimeType = null;
+        let aiExtractedPdfText = null;
+
+        if (window.pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
+        function toggleAiModal() {
+            const modal = document.getElementById('ai-generator-modal');
+            if (modal) {
+                modal.classList.toggle('hidden');
+                checkApiKeyNotice();
+            }
+        }
+
+        function togglePasteModal() {
+            const modal = document.getElementById('paste-json-modal');
+            if (modal) modal.classList.toggle('hidden');
+        }
+
+        function toggleSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            if (modal) modal.classList.toggle('hidden');
+        }
+
+        function switchAiTab(tab) {
+            currentAiTab = tab;
+            const promptBtn = document.getElementById('ai-tab-prompt-btn');
+            const photoBtn = document.getElementById('ai-tab-photo-btn');
+            const promptMode = document.getElementById('ai-prompt-mode');
+            const photoMode = document.getElementById('ai-photo-mode');
+
+            if (tab === 'prompt') {
+                promptBtn.className = "flex-1 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold transition-all shadow-md";
+                photoBtn.className = "flex-1 py-2 bg-slate-800 text-slate-400 hover:text-white rounded-xl text-xs font-bold transition-all border border-slate-700/60";
+                promptMode.classList.remove('hidden');
+                photoMode.classList.add('hidden');
+            } else {
+                photoBtn.className = "flex-1 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold transition-all shadow-md";
+                promptBtn.className = "flex-1 py-2 bg-slate-800 text-slate-400 hover:text-white rounded-xl text-xs font-bold transition-all border border-slate-700/60";
+                photoMode.classList.remove('hidden');
+                promptMode.classList.add('hidden');
+            }
+        }
+
+        async function previewAiImage(event) {
+            const file = event.target ? event.target.files[0] : event;
+            if (!file) return;
+
+            const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith('.pdf');
+            const previewImg = document.getElementById('ai-image-preview');
+            const previewPdf = document.getElementById('ai-pdf-preview');
+            const previewContainer = document.getElementById('ai-image-preview-container');
+
+            if (isPdf) {
+                aiMimeType = "application/pdf";
+                aiBase64Image = null;
+                aiExtractedPdfText = null;
+
+                if (previewImg) previewImg.classList.add('hidden');
+                if (previewPdf) previewPdf.classList.remove('hidden');
+                
+                const filenameEl = document.getElementById('ai-pdf-filename');
+                const filesizeEl = document.getElementById('ai-pdf-filesize');
+                if (filenameEl) filenameEl.textContent = file.name;
+                if (filesizeEl) filesizeEl.textContent = "Extracting text from PDF...";
+                if (previewContainer) previewContainer.classList.remove('hidden');
+
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    let fullText = "";
+                    const maxPages = Math.min(pdf.numPages, 10);
+
+                    for (let i = 1; i <= maxPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const tokenized = await page.getTextContent();
+                        const pageText = tokenized.items.map(item => item.str).join(" ");
+                        fullText += pageText + "\n";
+                    }
+
+                    if (fullText.trim().length > 40) {
+                        aiExtractedPdfText = fullText.trim();
+                        if (filesizeEl) filesizeEl.textContent = `${pdf.numPages} Page(s) • Ready (${aiExtractedPdfText.length} chars)`;
+                    } else {
+                        const page = await pdf.getPage(1);
+                        const viewport = page.getViewport({ scale: 1.5 });
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                        aiBase64Image = dataUrl.split(',')[1];
+                        aiMimeType = "image/jpeg";
+                        if (filesizeEl) filesizeEl.textContent = `${pdf.numPages} Page(s) • Scanned PDF`;
+                    }
+                } catch (err) {
+                    showToast("Failed to read PDF file: " + err.message, true);
+                    if (filesizeEl) filesizeEl.textContent = "Error processing PDF";
+                }
+            } else {
+                aiMimeType = file.type || "image/jpeg";
+                aiExtractedPdfText = null;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const dataUrl = e.target.result;
+                    aiBase64Image = dataUrl.split(',')[1];
+                    if (previewPdf) previewPdf.classList.add('hidden');
+                    if (previewImg) {
+                        previewImg.src = dataUrl;
+                        previewImg.classList.remove('hidden');
+                    }
+                    if (previewContainer) previewContainer.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function handleAiFileDrop(event) {
+            event.preventDefault();
+            if (event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+                previewAiImage(event.dataTransfer.files[0]);
+            }
+        }
+
+        function clearAiImage() {
+            aiBase64Image = null;
+            aiMimeType = null;
+            aiExtractedPdfText = null;
+            document.getElementById('ai-image-file').value = '';
+            document.getElementById('ai-image-preview-container').classList.add('hidden');
+        }
+
+        async function executeAiGeneration() {
+            if (!settings.geminiApiKey || settings.geminiApiKey.length < 5) {
+                showToast("Please enter your Gemini API Key in Settings first.", true);
+                toggleSettingsModal();
+                return;
+            }
+
+            const submitBtn = document.getElementById('ai-generate-submit-btn');
+            const loadingStatus = document.getElementById('ai-loading-status');
+            const statusTitle = document.getElementById('ai-status-title');
+            const statusSub = document.getElementById('ai-status-subtitle');
+
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            loadingStatus.classList.remove('hidden');
+
+            try {
+                const systemInstruction = `You are a world-class board exam reviewer creator for professional licensure exams.
+STRICT OUTPUT FORMAT: Respond ONLY with a valid JSON object matching this structure:
+{
+  "title": "Deck Title",
+  "desc": "Short overview description",
+  "course": "REE",
+  "category": "EE",
+  "questions": [
+    {
+      "q": "Question text...",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correct": 0,
+      "keyword": "Short memory anchor",
+      "because": "Detailed explanation with laws or formulas"
+    }
+  ]
+}`;
+
+                let promptText = "";
+                let payload = {};
+                const useWebSearch = document.getElementById('ai-web-search-toggle')?.checked ?? true;
+
+                if (currentAiTab === 'prompt') {
+                    const topic = document.getElementById('ai-topic-input').value.trim();
+                    const course = document.getElementById('ai-course-select').value;
+                    const category = document.getElementById('ai-cat-input').value.trim() || "EE";
+                    const count = document.getElementById('ai-count-select').value;
+                    const diff = document.getElementById('ai-diff-select').value;
+
+                    if (!topic) {
+                        showToast("Please enter a topic description.", true);
+                        submitBtn.disabled = false;
+                        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        loadingStatus.classList.add('hidden');
+                        return;
+                    }
+
+                    statusTitle.textContent = `Generating ${count} Board Items...`;
+                    statusSub.textContent = `Gathering verified board questions and formulas for "${topic}"...`;
+
+                    promptText = `Generate a high-quality study deck with exactly ${count} multiple choice board exam items for topic: "${topic}".
+Course: ${course}, Subject Category: ${category}, Difficulty: ${diff}.
+${useWebSearch ? "Search the web for real board exam questions and official formulas on this topic." : ""}
+Return strictly a valid JSON object with title, desc, course, category, and an array of exactly ${count} questions.`;
+
+                    payload = {
+                        contents: [{ role: "user", parts: [{ text: promptText }] }],
+                        systemInstruction: { parts: [{ text: systemInstruction }] },
+                        generationConfig: { responseMimeType: "application/json" }
+                    };
+                    if (useWebSearch) payload.tools = [{ "google_search": {} }];
+
+                } else {
+                    if (!aiBase64Image && !aiExtractedPdfText) {
+                        showToast("Please upload an image or PDF file first.", true);
+                        submitBtn.disabled = false;
+                        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        loadingStatus.classList.add('hidden');
+                        return;
+                    }
+                    const course = document.getElementById('ai-photo-course-select').value;
+                    const category = document.getElementById('ai-photo-cat-input').value.trim() || "EE";
+
+                    statusTitle.textContent = "Scanning Document...";
+                    statusSub.textContent = "Converting text and images into board exam practice items...";
+
+                    if (aiExtractedPdfText) {
+                        promptText = `Convert this extracted document text into a structured board exam quiz deck with 10 multiple choice questions. Course: ${course}, Category: ${category}.\n\n${aiExtractedPdfText.substring(0, 12000)}`;
+                        payload = {
+                            contents: [{ role: "user", parts: [{ text: promptText }] }],
+                            systemInstruction: { parts: [{ text: systemInstruction }] },
+                            generationConfig: { responseMimeType: "application/json" }
+                        };
+                    } else {
+                        let cleanBase64 = aiBase64Image;
+                        if (cleanBase64 && cleanBase64.includes(',')) cleanBase64 = cleanBase64.split(',')[1];
+                        promptText = `Scan this reviewer image and convert into a board exam quiz deck with 10 questions. Course: ${course}, Category: ${category}.`;
+                        payload = {
+                            contents: [
+                                {
+                                    role: "user",
+                                    parts: [
+                                        { text: promptText },
+                                        { inlineData: { mimeType: aiMimeType || "image/jpeg", data: cleanBase64 } }
+                                    ]
+                                }
+                            ],
+                            systemInstruction: { parts: [{ text: systemInstruction }] },
+                            generationConfig: { responseMimeType: "application/json" }
+                        };
+                    }
+                }
+
+                let result;
+                try {
+                    result = await callGeminiApi(payload);
+                } catch (firstErr) {
+                    if (payload.tools) {
+                        delete payload.tools;
+                        result = await callGeminiApi(payload);
+                    } else {
+                        throw firstErr;
+                    }
+                }
+
+                const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!jsonText) throw new Error("Received empty response from AI engine.");
+
+                const parsedDeck = parseJsonSafely(jsonText);
+                if (parsedDeck && saveImportedDeckObj(parsedDeck)) {
+                    toggleAiModal();
+                    showToast("✨ AI Study Deck successfully created!");
+                    clearAiImage();
+                } else {
+                    showToast("Failed to parse AI output structure.", true);
+                }
+
+            } catch (err) {
+                showToast(`AI Generation Error: ${err.message}`, true);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                loadingStatus.classList.add('hidden');
+            }
+        }
+
+        async function askAiTutorForDeepDive() {
+            const q = activeQuestions[currentIdx];
+            if (!q) return;
+
+            const tutorOutput = document.getElementById('ai-tutor-output');
+            const deepDiveBtn = document.getElementById('ai-deep-dive-btn');
+
+            if (!settings.geminiApiKey || settings.geminiApiKey.length < 5) {
+                showToast("Please enter your Gemini API Key in Settings to use the AI Tutor.", true);
+                toggleSettingsModal();
+                return;
+            }
+
+            if (deepDiveBtn) {
+                deepDiveBtn.disabled = true;
+                deepDiveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-amber-300"></i><span>Analyzing Item...</span>`;
+            }
+
+            tutorOutput.classList.remove('hidden');
+            tutorOutput.innerHTML = `<div class="text-indigo-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Consulting AI Board Tutor...</div>`;
+
+            try {
+                const promptText = `Explain this board exam question in comprehensive detail as a top-ranking board exam tutor. Use LaTeX notation for mathematical equations and fractions (e.g. \\frac{1}{2}mv^2, \\sqrt{2gR}):
+QUESTION: ${q.q}
+CORRECT ANSWER: ${q.options[q.correct]}
+EXPLANATION SUMMARY: ${q.because}
+
+Provide:
+1) Core Concept & Fundamental Law breakdown using KaTeX/LaTeX format
+2) Step-by-step calculation formulas
+3) Memory mnemonic or memory anchor.`;
+
+                const payload = {
+                    contents: [{ role: "user", parts: [{ text: promptText }] }]
+                };
+
+                const result = await callGeminiApi(payload);
+                const text = result?.candidates?.[0]?.content?.parts?.[0]?.text || "Unable to retrieve deep dive response.";
+
+                tutorOutput.innerHTML = `
+                    <div class="font-bold text-amber-300 mb-1 flex items-center gap-1.5">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <span>AI Tutor Deep-Dive Breakdown</span>
+                    </div>
+                    <div id="katex-rendered-content" class="text-slate-200 whitespace-pre-line leading-relaxed">${text}</div>
+                `;
+
+                if (window.renderMathInElement) {
+                    renderMathInElement(document.getElementById('katex-rendered-content'), {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false},
+                            {left: '\\(', right: '\\)', display: false},
+                            {left: '\\[', right: '\\]', display: true}
+                        ],
+                        throwOnError: false
+                    });
+                }
+
+            } catch (err) {
+                tutorOutput.innerHTML = `<div class="text-rose-400">Failed to load deep dive: ${err.message}</div>`;
+            } finally {
+                if (deepDiveBtn) {
+                    deepDiveBtn.disabled = false;
+                    deepDiveBtn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i><span>✨ AI Deep Dive Tutor</span>`;
+                }
+            }
+        }
+
         function initApp() {
             loadSettings();
-            loadHistory();
             loadDecksFromStorage();
             showDeckHub();
         }
