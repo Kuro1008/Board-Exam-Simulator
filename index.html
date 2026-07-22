@@ -110,7 +110,6 @@
 
     <main class="max-w-5xl mx-auto px-4 py-8 w-full flex-1 flex flex-col justify-center">
 
-        <!-- DECK HUB -->
         <div id="deck-hub-screen" class="space-y-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -147,12 +146,11 @@
             <div id="decks-container" class="grid grid-cols-1 sm:grid-cols-2 gap-5"></div>
         </div>
 
-        <!-- DECK START CARD -->
         <div id="start-card" class="hidden bg-slate-900 border border-slate-800/90 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden max-w-3xl mx-auto w-full">
             <button onclick="showDeckHub()" class="absolute top-4 left-4 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 transition-colors">
                 <i class="fa-solid fa-arrow-left"></i> Back to Decks
             </button>
-            <div class="mt-4 inline-flex p-3.5 bg-indigo-500/10 text-indigo-400 rounded-2xl mb-3 border border-indigo-500/20 text-3xl">
+            <div id="start-card-icon" class="mt-4 inline-flex p-3.5 bg-indigo-500/10 text-indigo-400 rounded-2xl mb-3 border border-indigo-500/20 text-3xl">
                 <i class="fa-solid fa-book-bookmark"></i>
             </div>
             <h2 id="active-deck-title" class="text-2xl sm:text-3xl font-extrabold text-white mb-2">Topic Title</h2>
@@ -239,7 +237,6 @@
             </div>
         </div>
 
-        <!-- QUIZ CARD -->
         <div id="quiz-card" class="hidden flex-col gap-5">
             <div class="space-y-2">
                 <div class="flex justify-between text-xs text-slate-400 font-medium px-1">
@@ -290,7 +287,6 @@
             </div>
         </div>
 
-        <!-- RESULTS CARD -->
         <div id="results-card" class="hidden bg-slate-900 border border-slate-800/90 rounded-2xl p-6 sm:p-10 shadow-2xl space-y-6">
             <div class="text-center space-y-3">
                 <div id="badge-icon" class="inline-flex p-4 rounded-full text-4xl mb-1">
@@ -382,7 +378,7 @@
             <div id="ai-apikey-warning-banner" class="hidden my-3 p-3 bg-amber-950/50 border border-amber-500/40 rounded-xl text-amber-200 text-xs flex items-center justify-between gap-2 shrink-0">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-triangle-exclamation text-amber-400 shrink-0"></i>
-                    <span><b>Local JSON import only.</b> If you want to upload or generate via AI, please input your API key in <button onclick="toggleSettingsModal(); toggleAiModal();" class="underline font-bold text-amber-300">Settings</button>.</span>
+                    <span><b>Local JSON import only.</b> If you want to upload or generate via AI, please input your API key in <button onclick="toggleSettingsModal(); toggleAiModal();" class="underline font-bold text-amber-300">Settings</button>. See Settings for instructions.</span>
                 </div>
             </div>
 
@@ -611,11 +607,11 @@
                             <span>Step-by-Step Guide for Google Gemini:</span>
                         </div>
                         <ol id="api-guide-steps" class="list-decimal list-inside space-y-1.5 text-[11px] text-slate-300 leading-relaxed pl-1">
-                            <li>Open your browser and go to <a href="https://aistudio.google.com/" target="_blank" class="text-indigo-400 underline font-bold">aistudio.google.com</a>.</li>
-                            <li>Log in using any standard Google (Gmail) account.</li>
-                            <li>Look at the top left or center of the page and click the blue <b>"Get API key"</b> button.</li>
-                            <li>Click the <b>"Create API key in new project"</b> button.</li>
-                            <li>Copy the long string of letters and numbers that appears, then paste it into the <b>API Key</b> box above! ✨</li>
+                            <li>Open your web browser and go to <a href="https://aistudio.google.com/" target="_blank" class="text-indigo-400 underline font-bold">aistudio.google.com</a>.</li>
+                            <li>Sign in using any normal Google (Gmail) account.</li>
+                            <li>At the top of the Google AI Studio page, click the blue <b>"Get API key"</b> button.</li>
+                            <li>Click the blue <b>"Create API key in new project"</b> button.</li>
+                            <li>Click the **Copy** icon next to your new key, come back here, and paste it into the <b>API Key</b> box above! ✨</li>
                         </ol>
                     </div>
                 </div>
@@ -898,38 +894,38 @@
             if (!titleEl || !stepsEl) return;
 
             if (provider === 'gemini') {
-                titleEl.innerHTML = `<i class="fa-solid fa-circle-question"></i><span>Step-by-Step Guide for Google Gemini:</span>`;
+                titleEl.innerHTML = `<i class="fa-solid fa-circle-question"></i><span>Step-by-Step Guide for Google Gemini (Beginner Friendly):</span>`;
                 stepsEl.innerHTML = `
-                    <li>Open your browser and go to <a href="https://aistudio.google.com/" target="_blank" class="text-indigo-400 underline font-bold">aistudio.google.com</a>.</li>
-                    <li>Log in using any standard Google (Gmail) account.</li>
-                    <li>Look at the top left or center of the page and click the blue <b>"Get API key"</b> button.</li>
-                    <li>Click the <b>"Create API key in new project"</b> button.</li>
-                    <li>Copy the long string of letters and numbers that appears, then paste it into the <b>API Key</b> box above! ✨</li>
+                    <li><b>Step 1:</b> Open your web browser and go to <a href="https://aistudio.google.com/" target="_blank" class="text-indigo-400 underline font-bold">aistudio.google.com</a>.</li>
+                    <li><b>Step 2:</b> Click the <b>"Sign in"</b> button and log in using any standard Google (Gmail) account.</li>
+                    <li><b>Step 3:</b> Look at the top left or center of the Google AI Studio dashboard and click the blue <b>"Get API key"</b> button.</li>
+                    <li><b>Step 4:</b> Click the blue <b>"Create API key in new project"</b> button.</li>
+                    <li><b>Step 5:</b> Click the <b>Copy</b> icon next to your generated key, come back here, and paste it directly into the <b>API Key</b> box above! ✨</li>
                 `;
             } else if (provider === 'openai') {
-                titleEl.innerHTML = `<i class="fa-solid fa-circle-question"></i><span>Step-by-Step Guide for OpenAI (ChatGPT):</span>`;
+                titleEl.innerHTML = `<i class="fa-solid fa-circle-question"></i><span>Step-by-Step Guide for OpenAI ChatGPT (Beginner Friendly):</span>`;
                 stepsEl.innerHTML = `
-                    <li>Go to <a href="https://platform.openai.com/" target="_blank" class="text-indigo-400 underline font-bold">platform.openai.com</a> and sign in with your OpenAI account.</li>
-                    <li>Click on your profile icon in the top right corner or navigate to the sidebar menu.</li>
-                    <li>Go to <b>API keys</b> (under Dashboard or Settings).</li>
-                    <li>Click <b>"+ Create new secret key"</b> and copy the key immediately.</li>
-                    <li>Paste your copied key into the <b>API Key</b> box above! 🤖</li>
+                    <li><b>Step 1:</b> Go to <a href="https://platform.openai.com/" target="_blank" class="text-indigo-400 underline font-bold">platform.openai.com</a> and sign in with your OpenAI account.</li>
+                    <li><b>Step 2:</b> Click on your profile icon in the top right corner or navigate to the developer dashboard menu.</li>
+                    <li><b>Step 3:</b> Click on <b>API keys</b> (under Dashboard or Settings).</li>
+                    <li><b>Step 4:</b> Click <b>"+ Create new secret key"</b>, name your key, and generate it.</li>
+                    <li><b>Step 5:</b> Copy your secret key immediately and paste it into the <b>API Key</b> box above! 🤖</li>
                 `;
             } else if (provider === 'anthropic') {
-                titleEl.innerHTML = `<i class="fa-solid fa-circle-question"></i><span>Step-by-Step Guide for Anthropic (Claude):</span>`;
+                titleEl.innerHTML = `<i class="fa-solid fa-circle-question"></i><span>Step-by-Step Guide for Anthropic Claude (Beginner Friendly):</span>`;
                 stepsEl.innerHTML = `
-                    <li>Go to <a href="https://console.anthropic.com/" target="_blank" class="text-indigo-400 underline font-bold">console.anthropic.com</a> and log in.</li>
-                    <li>Navigate to <b>API Keys</b> in the dashboard settings.</li>
-                    <li>Click <b>"Create Key"</b>, give it a name, and generate.</li>
-                    <li>Copy the key and paste it directly into the <b>API Key</b> box above! 🧠</li>
+                    <li><b>Step 1:</b> Go to <a href="https://console.anthropic.com/" target="_blank" class="text-indigo-400 underline font-bold">console.anthropic.com</a> and log in.</li>
+                    <li><b>Step 2:</b> Navigate to <b>API Keys</b> in the left sidebar settings.</li>
+                    <li><b>Step 3:</b> Click <b>"Create Key"</b>, type a name for your key, and click generate.</li>
+                    <li><b>Step 4:</b> Copy the key and paste it directly into the <b>API Key</b> box above! 🧠</li>
                 `;
             } else {
-                titleEl.innerHTML = `<i class="fa-solid fa-circle-question"></i><span>Step-by-Step Guide for DeepSeek:</span>`;
+                titleEl.innerHTML = `<i class="fa-solid fa-circle-question"></i><span>Step-by-Step Guide for DeepSeek (Beginner Friendly):</span>`;
                 stepsEl.innerHTML = `
-                    <li>Go to <a href="https://platform.deepseek.com/" target="_blank" class="text-indigo-400 underline font-bold">platform.deepseek.com</a> and log in.</li>
-                    <li>Navigate to the <b>API keys</b> tab in your developer dashboard.</li>
-                    <li>Click <b>"Create API key"</b> and copy the generated key.</li>
-                    <li>Paste your key into the <b>API Key</b> box above! 🚀</li>
+                    <li><b>Step 1:</b> Go to <a href="https://platform.deepseek.com/" target="_blank" class="text-indigo-400 underline font-bold">platform.deepseek.com</a> and sign in.</li>
+                    <li><b>Step 2:</b> Navigate to the <b>API keys</b> tab in your developer dashboard.</li>
+                    <li><b>Step 3:</b> Click <b>"Create API key"</b> and copy the generated key string.</li>
+                    <li><b>Step 4:</b> Paste your key into the <b>API Key</b> box above! 🚀</li>
                 `;
             }
         }
@@ -1273,7 +1269,7 @@
                             </span>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs font-bold px-3 py-1 bg-slate-800/80 text-slate-400 rounded-full border border-slate-700/60">${deck.questions ? deck.questions.length : 0} Items</span>
-                                <button onclick="deleteDeck(event, '${deck.id}')" class="p-1.5 text-slate-500 hover:text-rose-400 bg-slate-800/60 hover:bg-rose-500/10 rounded-lg border border-slate-700/40 transition-all" title="Delete Deck">
+                                <button onclick="deleteDeck(event, '${deck.id}')" class="p-1.5 text-slate-500 hover:text-rose-400 bg-slate-800/60 hover:bg-rose-500/10 rounded-lg border border-slate-700/40 transition-all z-10" title="Delete Deck">
                                     <i class="fa-solid fa-trash-can text-xs"></i>
                                 </button>
                             </div>
@@ -1301,6 +1297,16 @@
             document.getElementById('active-deck-title').textContent = activeDeck.title;
             document.getElementById('active-deck-desc').textContent = activeDeck.desc || 'No description provided.';
             document.getElementById('active-deck-count').textContent = `${activeDeck.questions ? activeDeck.questions.length : 0} Items`;
+
+            let catKey = (activeDeck.category || 'EE').toUpperCase();
+            if (catKey === "GENERAL" && activeCourseFolder === "REE") catKey = "EE";
+            const catMeta = getCategoryMeta(activeDeck.course || 'REE', catKey);
+            
+            const iconContainer = document.getElementById('start-card-icon');
+            if (iconContainer) {
+                iconContainer.className = `mt-4 inline-flex p-3.5 rounded-2xl mb-3 border text-3xl ${catMeta.color || 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'}`;
+                iconContainer.innerHTML = `<i class="fa-solid ${catMeta.icon || 'fa-book-bookmark'}"></i>`;
+            }
 
             document.getElementById('deck-hub-screen').classList.add('hidden');
             document.getElementById('start-card').classList.remove('hidden');
