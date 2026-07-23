@@ -199,11 +199,10 @@
                         <span>Paste JSON</span>
                     </button>
 
-                    <label class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all text-xs cursor-pointer shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-1.5 col-span-2 sm:col-span-1">
+                    <button onclick="toggleImportModal()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-1.5 col-span-2 sm:col-span-1">
                         <i class="fa-solid fa-file-circle-plus"></i>
                         <span>Import JSON File(s)</span>
-                        <input type="file" id="json-file-input" accept=".json,application/json,.txt" multiple onchange="importJsonDeck(event)" class="hidden">
-                    </label>
+                    </button>
                 </div>
             </div>
 
@@ -503,7 +502,19 @@
                 </button>
             </div>
 
-            <div class="flex items-center justify-between bg-indigo-950/60 p-3 rounded-xl border border-indigo-500/30">
+            <div class="bg-indigo-950/60 p-3 rounded-xl border border-indigo-500/30 space-y-2">
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold text-indigo-200">Target Course Folder</label>
+                    <a href="https://www.patreon.com/c/Kuro1008" target="_blank" class="text-[11px] font-bold text-rose-400 hover:text-rose-300 flex items-center gap-1 transition-all hover:scale-105">
+                        <i class="fa-brands fa-patreon text-rose-500"></i>
+                        <span>Support on Patreon</span>
+                    </a>
+                </div>
+                <select id="paste-json-course-target" class="w-full bg-slate-950 border border-slate-800 text-indigo-300 font-extrabold rounded-xl p-2.5 text-xs focus:outline-none focus:border-indigo-500 cursor-pointer">
+                </select>
+            </div>
+
+            <div class="flex items-center justify-between bg-indigo-950/40 p-3 rounded-xl border border-indigo-500/20">
                 <span class="text-xs text-indigo-200 font-medium">Need AI to generate JSON for you?</span>
                 <button onclick="toggleAiPromptHelperModal()" class="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold rounded-lg text-xs flex items-center gap-1.5 shadow-md">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -511,14 +522,71 @@
                 </button>
             </div>
 
-            <textarea id="paste-json-input" rows="8" placeholder='{"title": "Sample Topic", "course": "REE", "category": "EE", "questions": [...]}' class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-indigo-300 focus:outline-none focus:border-indigo-500 custom-scrollbar"></textarea>
+            <textarea id="paste-json-input" rows="7" placeholder='{"title": "Sample Topic", "category": "EE", "questions": [...]}' class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-indigo-300 focus:outline-none focus:border-indigo-500 custom-scrollbar"></textarea>
             
-            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
-                <button onclick="togglePasteModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs">Cancel</button>
-                <button onclick="processPastedJson()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-md shadow-indigo-600/30">
-                    <i class="fa-solid fa-file-import"></i>
-                    <span>Import Deck</span>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                <a href="https://www.patreon.com/c/Kuro1008" target="_blank" class="text-[11px] font-bold text-rose-400 hover:text-rose-300 flex items-center gap-1 transition-all">
+                    <i class="fa-brands fa-patreon text-rose-500"></i> Support Developer
+                </a>
+                <div class="flex items-center gap-2">
+                    <button onclick="togglePasteModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs">Cancel</button>
+                    <button onclick="processPastedJson()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-md shadow-indigo-600/30">
+                        <i class="fa-solid fa-file-import"></i>
+                        <span>Import Deck</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import JSON File Modal -->
+    <div id="import-json-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full space-y-4 shadow-2xl animate-pop text-left">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-base text-white flex items-center gap-2">
+                    <i class="fa-solid fa-file-circle-plus text-indigo-400"></i>
+                    <span>Import JSON File(s)</span>
+                </h3>
+                <button onclick="toggleImportModal()" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
+            </div>
+
+            <div class="bg-indigo-950/60 p-3 rounded-xl border border-indigo-500/30 space-y-2">
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold text-indigo-200">Target Course Folder</label>
+                    <a href="https://www.patreon.com/c/Kuro1008" target="_blank" class="text-[11px] font-bold text-rose-400 hover:text-rose-300 flex items-center gap-1 transition-all hover:scale-105">
+                        <i class="fa-brands fa-patreon text-rose-500"></i>
+                        <span>Support on Patreon</span>
+                    </a>
+                </div>
+                <select id="import-json-course-target" class="w-full bg-slate-950 border border-slate-800 text-indigo-300 font-extrabold rounded-xl p-2.5 text-xs focus:outline-none focus:border-indigo-500 cursor-pointer">
+                </select>
+            </div>
+
+            <div class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl p-6 text-center bg-slate-950/50 transition-colors cursor-pointer relative" onclick="document.getElementById('import-modal-file-input').click()" ondragover="event.preventDefault()" ondrop="handleImportModalFileDrop(event)">
+                <div class="flex items-center justify-center gap-2 mb-2">
+                    <i class="fa-solid fa-file-code text-3xl text-indigo-400"></i>
+                </div>
+                <div class="text-xs font-bold text-slate-200">Click to Browse or Drag JSON File(s) Here</div>
+                <div class="text-[10px] text-slate-500 mt-0.5">Supports single or multiple .json or .txt deck files</div>
+                <input type="file" id="import-modal-file-input" accept=".json,application/json,.txt" multiple onchange="handleImportModalFileSelect(event)" class="hidden">
+            </div>
+
+            <div id="import-selected-files-list" class="hidden space-y-1.5 bg-slate-950/60 p-3 rounded-xl border border-slate-800 text-xs max-h-32 overflow-y-auto custom-scrollbar">
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                <a href="https://www.patreon.com/c/Kuro1008" target="_blank" class="text-[11px] font-bold text-rose-400 hover:text-rose-300 flex items-center gap-1 transition-all">
+                    <i class="fa-brands fa-patreon text-rose-500"></i> Support Developer
+                </a>
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleImportModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs">Cancel</button>
+                    <button onclick="executeModalFileImport()" id="import-modal-submit-btn" disabled class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-md shadow-indigo-600/30 opacity-50 cursor-not-allowed">
+                        <i class="fa-solid fa-file-import"></i>
+                        <span>Import Selected Deck(s)</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1010,10 +1078,6 @@ Instructions:
                         <div>
                             <label class="block text-slate-300 font-bold mb-1">Target Course</label>
                             <select id="ai-course-select" onchange="updateModalSubjectDropdown()" class="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-indigo-500">
-                                <option value="REE">REE (Electrical Engineering)</option>
-                                <option value="LET">LET (Teachers Exam)</option>
-                                <option value="BLEPP">BLEPP (Psychometrician)</option>
-                                <option value="GENERAL">General / Custom</option>
                             </select>
                         </div>
                         <div>
@@ -1082,10 +1146,6 @@ Instructions:
                         <div>
                             <label class="block text-slate-300 font-bold mb-1">Course Folder</label>
                             <select id="ai-photo-course-select" onchange="updatePhotoModalSubjectDropdown()" class="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-indigo-500">
-                                <option value="REE">REE (Electrical Engineering)</option>
-                                <option value="LET">LET (Teachers Exam)</option>
-                                <option value="BLEPP">BLEPP (Psychometrician)</option>
-                                <option value="GENERAL">General / Custom</option>
                             </select>
                         </div>
                         <div>
@@ -1350,7 +1410,6 @@ Instructions:
         let customCoursesOrder = [];
         let historicalSessions = [];
 
-        /* UPGRADED API platform models list - Updated with latest Gemini 3.6 Flash, 3.5 Flash-Lite, 3.1 Pro & flagship models */
         const platformConfigs = {
             gemini: {
                 name: "Google Gemini",
@@ -1474,6 +1533,7 @@ Instructions:
         let answered = false;
         let missedQuestions = [];
         let selectedAiFile = null;
+        let modalImportSelectedFiles = [];
         let activeApiTab = 'gemini';
         let pendingDeckIdForSubjectChange = null;
 
@@ -1560,6 +1620,36 @@ Instructions:
             updateLiveTheme();
         }
 
+        function populateCourseDropdowns() {
+            const courseSelects = [
+                document.getElementById('paste-json-course-target'),
+                document.getElementById('import-json-course-target'),
+                document.getElementById('ai-course-select'),
+                document.getElementById('ai-photo-course-select')
+            ];
+
+            courseSelects.forEach(select => {
+                if (!select) return;
+                const currentVal = select.value;
+                select.innerHTML = '';
+                
+                Object.entries(coursePresets).forEach(([key, preset]) => {
+                    const opt = document.createElement('option');
+                    opt.value = key;
+                    opt.textContent = preset.title;
+                    select.appendChild(opt);
+                });
+
+                if (activeCourse && coursePresets[activeCourse]) {
+                    select.value = activeCourse;
+                } else if (currentVal && coursePresets[currentVal]) {
+                    select.value = currentVal;
+                } else {
+                    select.value = 'GENERAL';
+                }
+            });
+        }
+
         function updateThemeSetting(val) {
             settings.theme = val;
             saveSettings();
@@ -1593,6 +1683,7 @@ Instructions:
         }
 
         function initModalDropdowns() {
+            populateCourseDropdowns();
             const providerSelect = document.getElementById('modal-ai-provider-select');
             if (providerSelect) {
                 providerSelect.value = settings.aiProvider || 'gemini';
@@ -1733,6 +1824,7 @@ Instructions:
             preset.gradient = `from-[rgba(${r},${g},${b},0.3)] via-slate-900 to-slate-900 border-[${hexColor}] hover:border-indigo-300`;
 
             localStorage.setItem('ee_simulator_custom_courses', JSON.stringify(coursePresets));
+            populateCourseDropdowns();
             toggleEditCourseModal();
             showDeckHub();
             showToast(`Course folder "${preset.title}" updated successfully!`);
@@ -1979,6 +2071,7 @@ Instructions:
 
             renderBreadcrumbs();
             renderFilterTabs();
+            populateCourseDropdowns();
 
             const container = document.getElementById('decks-container');
             container.innerHTML = '';
@@ -2244,6 +2337,7 @@ Instructions:
             };
 
             localStorage.setItem('ee_simulator_custom_courses', JSON.stringify(coursePresets));
+            populateCourseDropdowns();
             toggleCustomCourseModal();
             showToast(`Course folder "${codeInput}" created successfully!`);
             showDeckHub(codeInput, 'ALL');
@@ -2257,6 +2351,7 @@ Instructions:
                 localStorage.setItem('ee_simulator_custom_order', JSON.stringify(customCoursesOrder));
                 userDecks = userDecks.filter(d => (d.course || 'GENERAL').toUpperCase() !== courseId);
                 saveDecksToStorage();
+                populateCourseDropdowns();
                 showDeckHub();
                 showToast(`Course folder "${courseId}" deleted.`);
             }
@@ -3157,7 +3252,7 @@ Generate 5 board exam questions in valid JSON.`;
                 const rawText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || "";
                 const parsedDeck = parseJsonSafely(rawText);
 
-                if (saveImportedDeckObj(parsedDeck, false)) {
+                if (saveImportedDeckObj(parsedDeck, false, course)) {
                     toggleAiModal();
                     showToast(`AI Study Deck "${parsedDeck.title}" generated successfully!`);
                     showDeckHub(parsedDeck.course, parsedDeck.category);
@@ -3721,12 +3816,110 @@ Give concise formula derivations and step-by-step calculation logic.`;
             if (!modal) return;
             modal.classList.toggle('hidden');
             if (!modal.classList.contains('hidden')) {
+                populateCourseDropdowns();
                 checkPlatformApiKeyStatus();
             }
         }
 
         function togglePasteModal() {
-            document.getElementById('paste-json-modal')?.classList.toggle('hidden');
+            const modal = document.getElementById('paste-json-modal');
+            if (!modal) return;
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                populateCourseDropdowns();
+            }
+        }
+
+        function toggleImportModal() {
+            const modal = document.getElementById('import-json-modal');
+            if (!modal) return;
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                populateCourseDropdowns();
+                modalImportSelectedFiles = [];
+                renderModalSelectedFilesList();
+            }
+        }
+
+        function handleImportModalFileSelect(event) {
+            const files = Array.from(event.target.files || []);
+            if (files.length > 0) {
+                modalImportSelectedFiles = files;
+                renderModalSelectedFilesList();
+            }
+        }
+
+        function handleImportModalFileDrop(event) {
+            event.preventDefault();
+            const files = Array.from(event.dataTransfer?.files || []);
+            if (files.length > 0) {
+                modalImportSelectedFiles = files;
+                renderModalSelectedFilesList();
+            }
+        }
+
+        function renderModalSelectedFilesList() {
+            const listContainer = document.getElementById('import-selected-files-list');
+            const submitBtn = document.getElementById('import-modal-submit-btn');
+            if (!listContainer || !submitBtn) return;
+
+            if (modalImportSelectedFiles.length === 0) {
+                listContainer.classList.add('hidden');
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                listContainer.classList.remove('hidden');
+                listContainer.innerHTML = '';
+                
+                modalImportSelectedFiles.forEach((file, idx) => {
+                    const item = document.createElement('div');
+                    item.className = "flex items-center justify-between text-indigo-300 font-mono text-[11px] bg-slate-900 p-2 rounded-lg border border-slate-800";
+                    item.innerHTML = `
+                        <div class="flex items-center gap-2 truncate">
+                            <i class="fa-solid fa-file-code text-indigo-400"></i>
+                            <span class="truncate">${file.name}</span>
+                        </div>
+                        <span class="text-slate-500 shrink-0 ml-2">${(file.size / 1024).toFixed(1)} KB</span>
+                    `;
+                    listContainer.appendChild(item);
+                });
+
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function executeModalFileImport() {
+            if (modalImportSelectedFiles.length === 0) {
+                showToast("Please select file(s) to import.", true);
+                return;
+            }
+
+            const targetCourse = document.getElementById('import-json-course-target')?.value || activeCourse || 'GENERAL';
+            let importedCount = 0;
+            let lastDeck = null;
+
+            modalImportSelectedFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const parsed = parseJsonSafely(e.target.result);
+                        if (saveImportedDeckObj(parsed, true, targetCourse)) {
+                            importedCount++;
+                            lastDeck = parsed;
+                            showToast(`Imported "${parsed.title}" into ${targetCourse}!`);
+                            
+                            if (importedCount === modalImportSelectedFiles.length && lastDeck) {
+                                toggleImportModal();
+                                showDeckHub(lastDeck.course, lastDeck.category);
+                            }
+                        }
+                    } catch(err) {
+                        showToast(`File Error in ${file.name}: ${err.message}`, true);
+                    }
+                };
+                reader.readAsText(file);
+            });
         }
 
         function toggleSettingsModal() {
@@ -3787,6 +3980,8 @@ Give concise formula derivations and step-by-step calculation logic.`;
 
         function processPastedJson() {
             const raw = document.getElementById('paste-json-input')?.value.trim();
+            const targetCourse = document.getElementById('paste-json-course-target')?.value || activeCourse || 'GENERAL';
+
             if (!raw) {
                 showToast("Please paste valid JSON text.", true);
                 return;
@@ -3794,9 +3989,9 @@ Give concise formula derivations and step-by-step calculation logic.`;
 
             try {
                 const parsed = parseJsonSafely(raw);
-                if (saveImportedDeckObj(parsed, true)) {
+                if (saveImportedDeckObj(parsed, true, targetCourse)) {
                     togglePasteModal();
-                    showToast(`Deck "${parsed.title}" imported successfully!`);
+                    showToast(`Deck "${parsed.title}" imported into ${targetCourse}!`);
                     showDeckHub(parsed.course, parsed.category);
                 } else {
                     showToast("Invalid deck JSON structure.", true);
@@ -3806,38 +4001,26 @@ Give concise formula derivations and step-by-step calculation logic.`;
             }
         }
 
-        function importJsonDeck(event) {
-            const files = event.target.files;
-            if (!files || files.length === 0) return;
-
-            Array.from(files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const parsed = parseJsonSafely(e.target.result);
-                        if (saveImportedDeckObj(parsed, true)) {
-                            showToast(`Imported "${parsed.title}" successfully!`);
-                            showDeckHub(parsed.course, parsed.category);
-                        }
-                    } catch(err) {
-                        showToast(`File Error in ${file.name}: ${err.message}`, true);
-                    }
-                };
-                reader.readAsText(file);
-            });
-        }
-
         function parseJsonSafely(text) {
             let clean = text.trim();
             clean = clean.replace(/```json/gi, '').replace(/```/g, '').trim();
             return JSON.parse(clean);
         }
 
-        function saveImportedDeckObj(deckObj, saveToStorage = true) {
+        function saveImportedDeckObj(deckObj, saveToStorage = true, overrideCourse = null) {
             if (!deckObj.title || (!deckObj.questions && !deckObj.subfolders)) return false;
 
             deckObj.id = deckObj.id || `deck_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
-            deckObj.course = (deckObj.course || 'GENERAL').toUpperCase();
+            
+            // Explicit routing override check:
+            if (overrideCourse) {
+                deckObj.course = overrideCourse.toUpperCase();
+            } else if (activeCourse) {
+                deckObj.course = activeCourse.toUpperCase();
+            } else {
+                deckObj.course = (deckObj.course || 'GENERAL').toUpperCase();
+            }
+
             deckObj.category = (deckObj.category || 'EE').toUpperCase();
 
             const existingIdx = userDecks.findIndex(d => d.id === deckObj.id);
