@@ -2,7 +2,10 @@
 <html lang="en" class="font-size-normal theme-slate cb-none">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Master Board Exam Simulator</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23080c14' stroke='%2338bdf8' stroke-width='4'/><path d='M50 18 L78 30 L50 42 L22 30 Z' fill='%231e40af' stroke='%23fbbf24' stroke-width='3'/><path d='M35 52 L50 64 L65 52 L65 72 C65 78 50 84 50 84 C50 84 35 78 35 72 Z' fill='%232563eb' stroke='%23fbbf24' stroke-width='3'/><path d='M42 58 L48 65 L60 53' fill='none' stroke='%23fbbf24' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,15 +25,24 @@
             --text-main: #f8fafc;
         }
 
+        html, body {
+            width: 100%;
+            overflow-x: hidden;
+            touch-action: pan-y pinch-zoom;
+            -webkit-overflow-scrolling: touch;
+        }
+
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--bg-main) !important;
             color: var(--text-main) !important;
             transition: background-color 0.2s ease, color 0.2s ease;
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
+            height: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
             background: #0f172a;
@@ -69,6 +81,7 @@
         .choice-option-text {
             color: #ffffff !important;
             font-weight: 500 !important;
+            word-break: break-word;
         }
 
         /* Colorblind Filters */
@@ -107,11 +120,17 @@
         </defs>
     </svg>
 
-    <div id="toast-container" class="fixed top-5 right-5 z-[99999] flex flex-col gap-2.5 pointer-events-none max-w-sm w-full px-4"></div>
+    <div id="toast-container" class="fixed top-5 right-5 left-5 sm:left-auto z-[99999] flex flex-col gap-2.5 pointer-events-none max-w-sm w-full mx-auto"></div>
+
+    <!-- Floating Back Button for Mobile / App WebView Navigation -->
+    <button id="mobile-floating-back-btn" onclick="handleMobileBackNavigation()" class="fixed bottom-6 left-6 z-50 px-3.5 py-2.5 bg-slate-900/90 hover:bg-slate-800 active:scale-95 text-indigo-300 font-bold rounded-2xl shadow-2xl border border-indigo-500/30 flex items-center gap-2 text-xs md:hidden backdrop-blur-md">
+        <i class="fa-solid fa-chevron-left text-xs"></i>
+        <span>Back</span>
+    </button>
 
     <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-6 py-3.5 flex items-center justify-between">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()" title="Return to Main Course Folders Home">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-3 cursor-pointer min-w-0" onclick="goHome()" title="Return to Main Course Folders Home">
                 <div class="w-10 h-10 rounded-xl overflow-hidden border border-indigo-500/40 bg-indigo-600/20 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-600/20">
                     <svg viewBox="0 0 100 100" class="w-full h-full object-cover">
                         <circle cx="50" cy="50" r="48" fill="#080c14" stroke="#38bdf8" stroke-width="4"/>
@@ -120,13 +139,13 @@
                         <path d="M42 58 L48 65 L60 53" fill="none" stroke="#fbbf24" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
-                <div>
-                    <h1 class="font-extrabold text-base sm:text-lg text-slate-100 leading-tight">Master Board Exam Simulator</h1>
-                    <p class="text-xs text-slate-400 font-medium">Multi-Course & Multi-Subject Drill Engine</p>
+                <div class="truncate">
+                    <h1 class="font-extrabold text-sm sm:text-lg text-slate-100 leading-tight truncate">Master Board Exam Simulator</h1>
+                    <p class="text-xs text-slate-400 font-medium truncate">Multi-Course & Multi-Subject Drill Engine</p>
                 </div>
             </div>
             
-            <div class="flex items-center gap-3 sm:gap-4">
+            <div class="flex items-center gap-2 sm:gap-4 shrink-0">
                 <button onclick="toggleSettingsModal()" class="px-3.5 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700/60 transition-all text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md">
                     <i class="fa-solid fa-sliders text-indigo-400"></i>
                     <span class="hidden sm:inline">Settings</span>
@@ -146,41 +165,41 @@
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-6 py-8 w-full flex-1 flex flex-col justify-center">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full flex-1 flex flex-col justify-center">
 
         <!-- Deck Hub Screen -->
         <div id="deck-hub-screen" class="space-y-6">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2.5">
+                    <h2 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white flex items-center gap-2.5">
                         <i class="fa-solid fa-folder-tree text-indigo-400"></i>
                         <span>Board Exam Folders</span>
                     </h2>
                     <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Organized by Exam Course & Subject Sections</p>
                 </div>
                 
-                <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
-                    <button onclick="toggleStatsModal()" class="px-3.5 py-2.5 bg-slate-800/90 hover:bg-slate-700 text-amber-400 font-bold rounded-xl transition-all text-xs sm:text-sm border border-slate-700/70 flex items-center gap-2 shadow-md">
+                <div class="grid grid-cols-2 sm:flex sm:flex-wrap sm:items-center gap-2 shrink-0">
+                    <button onclick="toggleStatsModal()" class="px-3 py-2 bg-slate-800/90 hover:bg-slate-700 text-amber-400 font-bold rounded-xl transition-all text-xs border border-slate-700/70 flex items-center justify-center gap-1.5 shadow-md">
                         <i class="fa-solid fa-chart-line text-amber-400"></i>
                         <span>Past Sessions</span>
                     </button>
 
-                    <button onclick="toggleAiModal()" class="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold rounded-xl transition-all text-xs sm:text-sm shadow-lg shadow-indigo-600/30 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]">
+                    <button onclick="toggleAiModal()" class="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold rounded-xl transition-all text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-[0.98]">
                         <i class="fa-solid fa-wand-magic-sparkles text-amber-300 animate-pulse"></i>
                         <span>AI Generator & Scanner</span>
                     </button>
 
-                    <button onclick="toggleAiPromptHelperModal()" class="px-3.5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold rounded-xl transition-all text-xs sm:text-sm flex items-center gap-2 shadow-md hover:scale-[1.02] active:scale-[0.98]">
+                    <button onclick="toggleAiPromptHelperModal()" class="px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 shadow-md hover:scale-[1.02] active:scale-[0.98] col-span-2 sm:col-span-1">
                         <i class="fa-solid fa-terminal text-slate-950"></i>
                         <span>✨ AI Prompt Commands</span>
                     </button>
 
-                    <button onclick="togglePasteModal()" class="px-4 py-2.5 bg-slate-800/90 hover:bg-slate-700 text-slate-200 font-bold rounded-xl transition-all text-xs sm:text-sm border border-slate-700/70 flex items-center gap-2 shadow-md">
+                    <button onclick="togglePasteModal()" class="px-3 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 font-bold rounded-xl transition-all text-xs border border-slate-700/70 flex items-center justify-center gap-1.5 shadow-md">
                         <i class="fa-solid fa-paste text-indigo-400"></i>
                         <span>Paste JSON</span>
                     </button>
 
-                    <label class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all text-xs sm:text-sm cursor-pointer shadow-lg shadow-indigo-600/30 flex items-center gap-2">
+                    <label class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all text-xs cursor-pointer shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-1.5 col-span-2 sm:col-span-1">
                         <i class="fa-solid fa-file-circle-plus"></i>
                         <span>Import JSON File(s)</span>
                         <input type="file" id="json-file-input" accept=".json,application/json,.txt" multiple onchange="importJsonDeck(event)" class="hidden">
@@ -190,14 +209,14 @@
 
             <div id="hub-breadcrumb" class="flex items-center justify-between text-xs sm:text-sm font-bold bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800/90 shadow-md"></div>
 
-            <div id="dynamic-filter-tabs" class="hidden items-center gap-2.5 overflow-x-auto py-2.5 px-1 mb-1 custom-scrollbar text-xs sm:text-sm font-bold"></div>
+            <div id="dynamic-filter-tabs" class="hidden items-center gap-2 overflow-x-auto py-2.5 px-1 mb-1 custom-scrollbar text-xs font-bold"></div>
 
-            <div id="decks-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full"></div>
+            <div id="decks-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full"></div>
         </div>
 
         <!-- Subfolder View Card -->
         <div id="subfolder-view-card" class="hidden flex-col gap-5 max-w-4xl mx-auto w-full animate-pop">
-            <div class="flex items-center justify-between bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-slate-900 border border-slate-800 p-4 rounded-2xl gap-3">
                 <div>
                     <h3 id="subfolder-view-title" class="text-lg font-extrabold text-white">Deck Contents</h3>
                     <p id="subfolder-view-subtitle" class="text-xs text-slate-400">Select a subfolder or review section</p>
@@ -216,9 +235,9 @@
 
         <!-- Document Viewer Card -->
         <div id="document-viewer-card" class="hidden flex-col gap-6 max-w-4xl mx-auto w-full animate-pop">
-            <div class="flex items-center justify-between bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl sticky top-20 z-30 backdrop-blur-md bg-slate-900/95">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-slate-900 border border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xl sticky top-20 z-30 backdrop-blur-md bg-slate-900/95 gap-3">
                 <div>
-                    <h3 id="doc-title" class="text-xl font-extrabold text-white">Document Viewer</h3>
+                    <h3 id="doc-title" class="text-lg sm:text-xl font-extrabold text-white">Document Viewer</h3>
                     <p id="doc-subtitle" class="text-xs text-slate-400">Reviewing all questions and Stabilo-highlighted answers</p>
                 </div>
                 <div class="flex items-center gap-2.5 flex-wrap">
@@ -251,14 +270,14 @@
                 </div>
             </div>
 
-            <div class="bg-slate-900 border border-slate-800/90 rounded-2xl p-6 sm:p-9 shadow-2xl space-y-6 relative text-left animate-pop">
+            <div class="bg-slate-900 border border-slate-800/90 rounded-2xl p-5 sm:p-9 shadow-2xl space-y-6 relative text-left animate-pop">
                 <div id="question-text" class="text-base sm:text-xl font-semibold text-slate-100 leading-snug">
                     Loading question...
                 </div>
 
                 <div id="choices-container" class="grid grid-cols-1 gap-3.5"></div>
 
-                <div id="explanation-box" class="hidden p-5 rounded-xl border text-sm leading-relaxed transition-all space-y-3">
+                <div id="explanation-box" class="hidden p-4 sm:p-5 rounded-xl border text-xs sm:text-sm leading-relaxed transition-all space-y-3">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2 font-bold" id="explanation-title">
                             <i class="fa-solid fa-circle-info"></i>
@@ -282,7 +301,7 @@
 
                 <div class="flex justify-between items-center pt-3">
                     <button onclick="showDeckHub()" class="text-xs font-semibold text-slate-500 hover:text-slate-300 underline">Quit Session</button>
-                    <button id="next-btn" onclick="nextQuestion()" class="hidden px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-md shadow-indigo-600/20 items-center gap-2 text-sm">
+                    <button id="next-btn" onclick="nextQuestion()" class="hidden px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-md shadow-indigo-600/20 items-center gap-2 text-xs sm:text-sm">
                         <span>Next Item</span>
                         <i class="fa-solid fa-chevron-right text-xs"></i>
                     </button>
@@ -1331,24 +1350,25 @@ Instructions:
         let customCoursesOrder = [];
         let historicalSessions = [];
 
+        /* UPGRADED API platform models list - Updated with latest Gemini 3.6 Flash, 3.5 Flash-Lite, 3.1 Pro & flagship models */
         const platformConfigs = {
             gemini: {
                 name: "Google Gemini",
                 keyField: "geminiApiKey",
                 modelField: "geminiModel",
-                defaultModel: "gemini-3-flash-preview",
+                defaultModel: "gemini-3.6-flash",
                 models: [
-                    { id: "gemini-3-flash-preview", name: "Gemini 3 Flash (Latest Flagship Intelligence)" },
-                    { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash (Multimodal Speed)" },
-                    { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro (Complex STEM Reasoning)" }
+                    { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash (Workhorse & High Token Efficiency)" },
+                    { id: "gemini-3.5-flash-lite", name: "Gemini 3.5 Flash-Lite (Ultra-Fast & Budget)" },
+                    { id: "gemini-3.1-pro-preview", name: "Gemini 3.1 Pro (Deep Reasoning & Complex Math)" },
+                    { id: "gemini-3.5-flash", name: "Gemini 3.5 Flash (Agentic & High Speed)" }
                 ],
-                guideTitle: "Foolproof Guide for Google Gemini Key Setup",
+                guideTitle: "Guide for Google Gemini Setup",
                 guideSteps: [
                     "Navigate to 🌐 <b>aistudio.google.com</b>",
-                    "Sign in with your standard Google Account",
-                    "Click the 🔑 <b>Get API Key</b> menu item at top left",
-                    "Click ➕ <b>Create API key in new project</b>",
-                    "Click 📋 <b>Copy key</b> and paste into the box below!"
+                    "Sign in with your Google Account",
+                    "Click 🔑 <b>Get API Key</b> at the top left",
+                    "Create a key and paste it below!"
                 ],
                 placeholder: "AIzaSy..."
             },
@@ -1358,16 +1378,15 @@ Instructions:
                 modelField: "openaiModel",
                 defaultModel: "gpt-4o",
                 models: [
-                    { id: "gpt-4o", name: "GPT-4o (Omni Flagship Multimodal)" },
-                    { id: "gpt-4o-mini", name: "GPT-4o Mini (Cost-Efficient Fast)" },
-                    { id: "o3-mini", name: "OpenAI o3-Mini (Advanced STEM & Math)" }
+                    { id: "gpt-4o", name: "GPT-4o (Omni Flagship Model)" },
+                    { id: "o3-mini", name: "o3-Mini (Advanced STEM & Reasoning)" },
+                    { id: "gpt-4.5-preview", name: "GPT-4.5 (Frontier Intelligence)" }
                 ],
-                guideTitle: "Foolproof Guide for OpenAI Key Setup",
+                guideTitle: "Guide for OpenAI Setup",
                 guideSteps: [
                     "Go to 🌐 <b>platform.openai.com</b>",
-                    "Click on ⚙️ <b>Settings</b> -> 🔑 <b>API Keys</b>",
-                    "Click ➕ <b>Create new secret key</b>",
-                    "Copy your 📋 <b>sk-proj-...</b> key and paste below!"
+                    "Click ⚙️ <b>Settings</b> -> 🔑 <b>API Keys</b>",
+                    "Create a new secret key and paste below!"
                 ],
                 placeholder: "sk-proj-..."
             },
@@ -1375,17 +1394,16 @@ Instructions:
                 name: "Anthropic (Claude)",
                 keyField: "anthropicApiKey",
                 modelField: "anthropicModel",
-                defaultModel: "claude-3-7-sonnet-20250219",
+                defaultModel: "claude-3-7-sonnet",
                 models: [
-                    { id: "claude-3-7-sonnet-20250219", name: "Claude 3.7 Sonnet (Hybrid Thinking Flagship)" },
-                    { id: "claude-3-5-haiku-20241022", name: "Claude 3.5 Haiku (Fast)" }
+                    { id: "claude-3-7-sonnet", name: "Claude 3.7 Sonnet (Hybrid Reasoning Flagship)" },
+                    { id: "claude-3-5-haiku-20241022", name: "Claude 3.5 Haiku (High Speed)" }
                 ],
-                guideTitle: "Foolproof Guide for Anthropic Claude Setup",
+                guideTitle: "Guide for Anthropic Claude Setup",
                 guideSteps: [
                     "Go to 🌐 <b>console.anthropic.com</b>",
-                    "Click 🔑 <b>API Keys</b> in the left sidebar",
-                    "Click ➕ <b>Create Key</b> icon/button",
-                    "Copy your 📋 <b>sk-ant-api03-...</b> key and paste below!"
+                    "Click 🔑 <b>API Keys</b> and generate a key",
+                    "Copy your sk-ant-... key and paste below!"
                 ],
                 placeholder: "sk-ant-api03-..."
             },
@@ -1393,16 +1411,15 @@ Instructions:
                 name: "DeepSeek AI",
                 keyField: "deepseekApiKey",
                 modelField: "deepseekModel",
-                defaultModel: "deepseek-reasoner",
+                defaultModel: "deepseek-chat",
                 models: [
-                    { id: "deepseek-reasoner", name: "DeepSeek-R1 (Reasoner Flagship)" },
-                    { id: "deepseek-chat", name: "DeepSeek-V3 (Standard Chat)" }
+                    { id: "deepseek-chat", name: "DeepSeek-V3 (Standard Chat & Coding)" },
+                    { id: "deepseek-reasoner", name: "DeepSeek-R1 (Advanced Reasoning)" }
                 ],
-                guideTitle: "Foolproof Guide for DeepSeek Key Setup",
+                guideTitle: "Guide for DeepSeek Setup",
                 guideSteps: [
                     "Go to 🌐 <b>platform.deepseek.com</b>",
-                    "Click 🔑 <b>API Keys</b> from menu",
-                    "Click ➕ <b>Create API Key</b> button",
+                    "Generate an API Key from the menu",
                     "Copy key and paste below!"
                 ],
                 placeholder: "sk-..."
@@ -1416,12 +1433,11 @@ Instructions:
                     { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B Versatile" },
                     { id: "deepseek-r1-distill-llama-70b", name: "DeepSeek R1 Distill Llama 70B" }
                 ],
-                guideTitle: "Foolproof Guide for Groq Setup",
+                guideTitle: "Guide for Groq Setup",
                 guideSteps: [
                     "Go to 🌐 <b>console.groq.com</b>",
-                    "Click 🔑 <b>API Keys</b> in sidebar",
-                    "Click ➕ <b>Create API Key</b>",
-                    "Copy key and paste below!"
+                    "Click 🔑 <b>API Keys</b> and generate a key",
+                    "Copy gsk_... key and paste below!"
                 ],
                 placeholder: "gsk_..."
             },
@@ -1429,17 +1445,16 @@ Instructions:
                 name: "OpenRouter (Universal)",
                 keyField: "openrouterApiKey",
                 modelField: "openrouterModel",
-                defaultModel: "google/gemini-3-flash-preview",
+                defaultModel: "google/gemini-3.6-flash",
                 models: [
-                    { id: "google/gemini-3-flash-preview", name: "Gemini 3 Flash (via OpenRouter)" },
-                    { id: "anthropic/claude-3-7-sonnet", name: "Claude 3.7 Sonnet (via OpenRouter)" },
+                    { id: "google/gemini-3.6-flash", name: "Gemini 3.6 Flash (via OpenRouter)" },
+                    { id: "anthropic/claude-3.7-sonnet", name: "Claude 3.7 Sonnet (via OpenRouter)" },
                     { id: "deepseek/deepseek-r1", name: "DeepSeek R1 (via OpenRouter)" }
                 ],
-                guideTitle: "Foolproof Guide for OpenRouter Setup",
+                guideTitle: "Guide for OpenRouter Setup",
                 guideSteps: [
                     "Go to 🌐 <b>openrouter.ai</b>",
-                    "Click 🔑 <b>Keys</b> menu icon",
-                    "Click ➕ <b>Create Key</b>",
+                    "Create an API key under Keys menu",
                     "Copy key and paste below!"
                 ],
                 placeholder: "sk-or-v1-..."
@@ -1469,22 +1484,41 @@ Instructions:
             theme: 'slate',
             fontSize: 'normal',
             aiProvider: 'gemini',
-            aiModel: 'gemini-3-flash-preview',
+            aiModel: 'gemini-3.6-flash',
             geminiApiKey: '',
-            geminiModel: 'gemini-3-flash-preview',
+            geminiModel: 'gemini-3.6-flash',
             openaiApiKey: '',
             openaiModel: 'gpt-4o',
             anthropicApiKey: '',
-            anthropicModel: 'claude-3-7-sonnet-20250219',
+            anthropicModel: 'claude-3-7-sonnet',
             deepseekApiKey: '',
-            deepseekModel: 'deepseek-reasoner',
+            deepseekModel: 'deepseek-chat',
             groqApiKey: '',
             groqModel: 'llama-3.3-70b-versatile',
             openrouterApiKey: '',
-            openrouterModel: 'google/gemini-3-flash-preview',
+            openrouterModel: 'google/gemini-3.6-flash',
             shuffleQuestions: true,
             shuffleChoices: true
         };
+
+        function handleMobileBackNavigation() {
+            const quizCard = document.getElementById('quiz-card');
+            const resultsCard = document.getElementById('results-card');
+            const docCard = document.getElementById('document-viewer-card');
+            const subCard = document.getElementById('subfolder-view-card');
+
+            if (!quizCard.classList.contains('hidden') || !resultsCard.classList.contains('hidden')) {
+                showDeckHub(activeCourse, activeCategory);
+            } else if (!docCard.classList.contains('hidden')) {
+                goBackFromDocumentViewer();
+            } else if (!subCard.classList.contains('hidden')) {
+                goBackFromSubfolderView();
+            } else if (activeCourse !== null) {
+                goHome();
+            } else {
+                showToast("Already at main course overview screen.");
+            }
+        }
 
         function loadSettings() {
             try {
@@ -2975,6 +3009,7 @@ Instructions:
             if (container) container.classList.add('hidden');
         }
 
+        /* PDF EXTRACTION LOGIC */
         async function extractTextFromPdf(file) {
             if (!window.pdfjsLib) throw new Error("PDF parsing library failed to load.");
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -2990,8 +3025,8 @@ Instructions:
                 fullText += `\n--- Page ${i} ---\n` + pageText;
             }
 
-            if (!fullText.trim() || fullText.trim().length < 30) {
-                throw new Error("This PDF appears to be a scanned image without selectable text.");
+            if (!fullText.trim() || fullText.trim().length < 20) {
+                throw new Error("This PDF appears to be scanned images without selectable text. Use the PDF Prompt command to process image PDFs.");
             }
 
             return fullText;
@@ -3197,8 +3232,8 @@ Generate 5 board exam questions in valid JSON.`;
 
             let response = await fetch(apiUrl, { method: 'POST', headers, body });
             
-            if (!response.ok && response.status === 429 && provider === 'gemini' && model !== 'gemini-3-flash-preview') {
-                model = 'gemini-3-flash-preview';
+            if (!response.ok && response.status === 429 && provider === 'gemini' && model !== 'gemini-3.6-flash') {
+                model = 'gemini-3.6-flash';
                 apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
                 response = await fetch(apiUrl, { method: 'POST', headers, body });
             }
@@ -3847,4 +3882,3 @@ Give concise formula derivations and step-by-step calculation logic.`;
     </script>
 </body>
 </html>
-    
