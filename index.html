@@ -389,7 +389,7 @@
                         <i class="fa-solid fa-layer-group text-indigo-400 text-[10px]"></i>
                     </div>
                     <select id="drill-format-dropdown" onchange="updateDrillFormat(this.value)" class="bg-slate-900 text-indigo-300 font-extrabold text-xs sm:text-sm rounded-lg px-2 py-1.5 border border-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer w-full">
-                        <option value="mc" selected>Multiple Choice</option>
+                        <option value="mc">Multiple Choice</option>
                         <option value="tf">True / False</option>
                         <option value="fill">Fill in the Blanks</option>
                     </select>
@@ -2962,6 +2962,11 @@ Instructions:
             document.getElementById('active-deck-desc').textContent = currentActiveDeck.desc || "Interactive board exam review deck.";
             document.getElementById('active-deck-count').textContent = `${currentActiveDeck.questions ? currentActiveDeck.questions.length : 0} Items`;
 
+            const formatDropdown = document.getElementById('drill-format-dropdown');
+            if (formatDropdown) {
+                formatDropdown.value = settings.drillFormat || 'mc';
+            }
+
             const courseKey = (currentActiveDeck.course || 'GENERAL').toUpperCase();
             const preset = coursePresets[courseKey] || coursePresets.GENERAL;
             const iconClass = preset.icon || 'fa-bolt';
@@ -3188,9 +3193,8 @@ Number of questions: ${count}
 Difficulty level: ${diff}
 
 Instructions:
-1. Exclude 'None of the above' and 'None of these' completely.
-2. Ensure distractor quality is subtle and plausible.
-3. Return ONLY valid JSON matching this structure:
+1. Ensure distractor quality is subtle and plausible.
+2. Return ONLY valid JSON matching this structure:
 {
   "title": "Deck Title",
   "desc": "Short description",
@@ -3234,12 +3238,10 @@ Instructions:
 ${pdfText.substring(0, 8000)}
 
 Course: ${course}, Subject Category: ${category}
-Exclude 'None of the above' options.
 Generate 8 board exam questions in valid JSON.`;
                     } else {
                         promptText = `Create a board exam drill deck in strict JSON format based on reviewer image.
 Course: ${course}, Subject Category: ${category}
-Exclude 'None of the above' options.
 Generate 5 board exam questions in valid JSON.`;
                     }
                 }
@@ -3360,29 +3362,42 @@ Generate 5 board exam questions in valid JSON.`;
                 activeQuestions.sort(() => Math.random() - 0.5);
             }
 
-            if (settings.drillFormat === 'mc' && settings.shuffleChoices) {
-                activeQuestions.forEach(item => {
-                    if (item.options && Array.isArray(item.options) && item.options.length > 0) {
-                        item.options = item.options.filter(opt => !/none of the above|none of these/i.test(opt));
-
-                        const correctText = item.options[item.correct] || item.options[0];
-                        
-                        const hasAllOfAbove = item.options.some(opt => /all of the above/i.test(opt));
-                        if (hasAllOfAbove) {
-                            const shouldReduceChoices = Math.random() < 0.5;
-                            if (shouldReduceChoices && item.options.length > 2) {
-                                const nonAllOptions = item.options.filter(opt => !/all of the above/i.test(opt));
-                                const kept = nonAllOptions.slice(0, 1);
-                                kept.push("All of the above");
-                                item.options = kept;
-                            }
+            if (settings.drillFormat === 'mc') {
+                if (settings.shuffleChoices) {
+                    activeQuestions.forEach(item => {
+                        if (item.options && Array.isArray(item.options) && item.options.length > 0) {
+                            const correctText = item.options[item.correct] || item.options[0];
+                            item.options.sort(() => Math.random() - 0.5);
+                            item.correct = item.options.indexOf(correctText);
+                            if (item.correct === -1) item.correct = 0;
                         }
+                    });
+                }
+            } else {
+                if (settings.shuffleChoices) {
+                    activeQuestions.forEach(item => {
+                        if (item.options && Array.isArray(item.options) && item.options.length > 0) {
+                            item.options = item.options.filter(opt => !/none of the above|none of these/i.test(opt));
 
-                        item.options.sort(() => Math.random() - 0.5);
-                        item.correct = item.options.indexOf(correctText);
-                        if (item.correct === -1) item.correct = 0;
-                    }
-                });
+                            const correctText = item.options[item.correct] || item.options[0];
+                            
+                            const hasAllOfAbove = item.options.some(opt => /all of the above/i.test(opt));
+                            if (hasAllOfAbove) {
+                                const shouldReduceChoices = Math.random() < 0.5;
+                                if (shouldReduceChoices && item.options.length > 2) {
+                                    const nonAllOptions = item.options.filter(opt => !/all of the above/i.test(opt));
+                                    const kept = nonAllOptions.slice(0, 1);
+                                    kept.push("All of the above");
+                                    item.options = kept;
+                                }
+                            }
+
+                            item.options.sort(() => Math.random() - 0.5);
+                            item.correct = item.options.indexOf(correctText);
+                            if (item.correct === -1) item.correct = 0;
+                        }
+                    });
+                }
             }
 
             currentIdx = 0;
@@ -3502,9 +3517,9 @@ Generate 5 board exam questions in valid JSON.`;
 
             } else {
                 const letters = ['A', 'B', 'C', 'D'];
-                const cleanOptions = (q.options || []).filter(opt => !/none of the above|none of these/i.test(opt));
+                const optionsToRender = q.options || [];
 
-                cleanOptions.forEach((opt, idx) => {
+                optionsToRender.forEach((opt, idx) => {
                     const btn = document.createElement('button');
                     btn.className = "w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.99]";
                     btn.onclick = () => selectOption(idx);
